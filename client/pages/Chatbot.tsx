@@ -600,10 +600,12 @@ export default function Chatbot() {
                   </div>
                 </DialogContent>
               </Dialog>
-              <Button variant="outline" size="sm" disabled>
-                <HandIcon className="mr-2 h-4 w-4" />
-                Sign Language (Future)
-              </Button>
+              <Link to="/sign">
+                <Button variant="outline" size="sm">
+                  <HandIcon className="mr-2 h-4 w-4" />
+                  Sign Language
+                </Button>
+              </Link>
             </div>
           </div>
 
