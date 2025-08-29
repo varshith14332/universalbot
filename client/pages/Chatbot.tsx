@@ -66,6 +66,22 @@ export default function Chatbot() {
   const streamRef = useRef<MediaStream | null>(null);
   const [ocrLoading, setOcrLoading] = useState(false);
 
+  const guessLang = (t: string): string | null => {
+    const s = (t || "").trim();
+    if (!s) return null;
+    if (/^[A-Za-z0-9\s'",.?!-]+$/.test(s)) return "en"; // basic ASCII -> English
+    if (/[\u0400-\u04FF]/.test(s)) return "ru"; // Cyrillic
+    if (/[\u0600-\u06FF]/.test(s)) return "ar"; // Arabic
+    if (/[\u3040-\u30FF]/.test(s)) return "ja"; // Hiragana/Katakana
+    if (/[\uAC00-\uD7AF]/.test(s)) return "ko"; // Hangul
+    if (/[\u4E00-\u9FFF]/.test(s)) return "zh"; // CJK
+    if (/[\u0900-\u097F]/.test(s)) return "hi"; // Devanagari
+    if (/[\u0980-\u09FF]/.test(s)) return "bn"; // Bengali
+    if (/[\u0C00-\u0C7F]/.test(s)) return "te"; // Telugu
+    if (/[\u0B80-\u0BFF]/.test(s)) return "ta"; // Tamil
+    return null;
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -330,6 +346,13 @@ export default function Chatbot() {
       setDetectConf(null);
       return;
     }
+    const guess = guessLang(text);
+    if (text.length < 4 && guess) {
+      setDetectedLang(guess);
+      setDetectConf(null);
+      return;
+    }
+
     let cancelled = false;
     const t = setTimeout(async () => {
       try {
@@ -341,13 +364,19 @@ export default function Chatbot() {
         });
         const data = await res.json();
         if (cancelled) return;
-        setDetectedLang(data?.language ?? null);
-        setDetectConf(
-          typeof data?.confidence === "number" ? data.confidence : null,
-        );
+        let lang: string | null = data?.language ?? null;
+        let conf: number | null =
+          typeof data?.confidence === "number" ? data.confidence : null;
+        if (!lang && guess) {
+          lang = guess;
+          conf = null;
+        }
+        setDetectedLang(lang);
+        setDetectConf(conf);
       } catch {
         if (cancelled) return;
-        setDetectedLang(null);
+        const g = guessLang(text);
+        setDetectedLang(g);
         setDetectConf(null);
       } finally {
         if (!cancelled) setDetecting(false);
