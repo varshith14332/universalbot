@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Send,
   Mic,
@@ -16,6 +18,7 @@ import {
   Menu,
   Home,
   Settings,
+  Camera,
 } from "lucide-react";
 
 interface Message {
@@ -43,6 +46,12 @@ export default function Chatbot() {
   const [detecting, setDetecting] = useState(false);
   const [detectConf, setDetectConf] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
+  const [translating, setTranslating] = useState(false);
+  const [targetLang, setTargetLang] = useState<string>("en");
+  const [ocrOpen, setOcrOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [ocrLoading, setOcrLoading] = useState(false);
 
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -165,6 +174,51 @@ export default function Chatbot() {
     return primary || voices[0] || null;
   };
 
+  const languages = [
+    { code: "en", name: "English" },
+    { code: "es", name: "Spanish" },
+    { code: "fr", name: "French" },
+    { code: "de", name: "German" },
+    { code: "hi", name: "Hindi" },
+    { code: "ar", name: "Arabic" },
+    { code: "pt", name: "Portuguese" },
+    { code: "it", name: "Italian" },
+    { code: "ru", name: "Russian" },
+    { code: "ja", name: "Japanese" },
+    { code: "ko", name: "Korean" },
+    { code: "zh", name: "Chinese" },
+    { code: "bn", name: "Bengali" },
+    { code: "ur", name: "Urdu" },
+    { code: "te", name: "Telugu" },
+    { code: "ta", name: "Tamil" },
+  ];
+
+  const translateText = async (to: string) => {
+    const text = inputMessage.trim() || [...messages].reverse().find((m) => m.isUser)?.content || "";
+    if (!text) return;
+    setTranslating(true);
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, source: detectedLang || "auto", target: to }),
+      });
+      const data = await res.json();
+      const translated: string = data?.translation || "";
+      if (translated) {
+        const botResponse: Message = {
+          id: (Date.now() + 2).toString(),
+          content: translated,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botResponse]);
+      }
+    } finally {
+      setTranslating(false);
+    }
+  };
+
   const speakText = () => {
     const w = typeof window !== "undefined" ? (window as any) : null;
     if (!w || !w.speechSynthesis) {
@@ -227,6 +281,8 @@ export default function Chatbot() {
         recognitionRef.current?.stop?.();
         const w = typeof window !== "undefined" ? (window as any) : null;
         w?.speechSynthesis?.cancel?.();
+        const tracks = streamRef.current?.getTracks?.() || [];
+        tracks.forEach((t) => t.stop());
       } catch {}
     };
   }, []);
@@ -317,10 +373,78 @@ export default function Chatbot() {
                 <Volume2 className="mr-2 h-4 w-4" />
                 {isSpeaking ? "Speaking..." : "Text-to-Speech"}
               </Button>
-              <Button variant="outline" size="sm">
-                <Languages className="mr-2 h-4 w-4" />
-                Translate
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={translating}>
+                    <Languages className="mr-2 h-4 w-4" />
+                    {translating ? "Translating..." : "Translate"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Translate to</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {languages.map((l) => (
+                    <DropdownMenuItem key={l.code} onClick={() => { setTargetLang(l.code); translateText(l.code); }}>
+                      {l.name} ({l.code})
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Dialog open={ocrOpen} onOpenChange={setOcrOpen}>
+                <Button variant="outline" size="sm" onClick={() => setOcrOpen(true)}>
+                  <Camera className="mr-2 h-4 w-4" />
+                  Image to Text
+                </Button>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Image to Text</DialogTitle>
+                    <DialogDescription>Open your camera, capture, and extract text.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3">
+                    <video ref={videoRef} className="w-full rounded border" autoPlay playsInline muted></video>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={async () => {
+                        try {
+                          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                          streamRef.current = stream;
+                          if (videoRef.current) videoRef.current.srcObject = stream;
+                        } catch {
+                          // ignore
+                        }
+                      }}>Start Camera</Button>
+                      <Button onClick={async () => {
+                        const video = videoRef.current;
+                        if (!video) return;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth || 640;
+                        canvas.height = video.videoHeight || 480;
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/png');
+                        setOcrLoading(true);
+                        try {
+                          // Load Tesseract.js from CDN lazily
+                          if (!(window as any).Tesseract) {
+                            await new Promise<void>((resolve, reject) => {
+                              const s = document.createElement('script');
+                              s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                              s.onload = () => resolve();
+                              s.onerror = () => reject(new Error('Failed to load OCR'));
+                              document.head.appendChild(s);
+                            });
+                          }
+                          const { Tesseract } = (window as any);
+                          const result = await Tesseract.recognize(dataUrl, detectedLang || 'eng');
+                          const text = result?.data?.text?.trim();
+                          if (text) setInputMessage((prev) => (prev ? prev + ' ' : '') + text);
+                        } catch {}
+                        setOcrLoading(false);
+                      }} disabled={ocrLoading}>{ocrLoading ? 'Processing...' : 'Capture & Extract'}</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button variant="outline" size="sm" disabled>
                 <HandIcon className="mr-2 h-4 w-4" />
                 Sign Language (Future)
