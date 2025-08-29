@@ -427,7 +427,6 @@ export default function Chatbot() {
                       key={l.code}
                       onClick={() => {
                         setTargetLang(l.code);
-                        translateText(l.code);
                       }}
                     >
                       {l.name} ({l.code})
