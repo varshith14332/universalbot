@@ -388,7 +388,11 @@ export default function Chatbot() {
           tessedit_pageseg_mode: "6",
         },
       );
-      return (result?.data?.text || "").trim();
+      const text = (result?.data?.text || "").trim();
+      const conf = typeof result?.data?.confidence === "number" ? result.data.confidence : 0;
+      if (!text) return "";
+      if (conf < 60) return ""; // suppress low-confidence gibberish
+      return text;
     } catch {
       return "";
     }
