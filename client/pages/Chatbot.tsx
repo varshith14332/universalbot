@@ -428,6 +428,17 @@ export default function Chatbot() {
   }, []);
 
   useEffect(() => {
+    if (!ocrOpen) {
+      try {
+        const tracks = streamRef.current?.getTracks?.() || [];
+        tracks.forEach((t) => t.stop());
+        streamRef.current = null;
+        if (videoRef.current) (videoRef.current as any).srcObject = null;
+      } catch {}
+    }
+  }, [ocrOpen]);
+
+  useEffect(() => {
     const text = inputMessage.trim();
     if (!text) {
       setDetectedLang(null);
@@ -691,14 +702,21 @@ export default function Chatbot() {
                         variant="outline"
                         onClick={async () => {
                           try {
-                            const stream =
-                              await navigator.mediaDevices.getUserMedia({
-                                video: true,
-                              });
+                            const constraints: MediaStreamConstraints = {
+                              video: { facingMode: { ideal: "environment" } },
+                              audio: false,
+                            };
+                            const stream = await navigator.mediaDevices.getUserMedia(
+                              constraints,
+                            );
                             streamRef.current = stream;
-                            if (videoRef.current)
+                            if (videoRef.current) {
                               videoRef.current.srcObject = stream;
-                          } catch {
+                              try {
+                                await videoRef.current.play();
+                              } catch {}
+                            }
+                          } catch (e) {
                             // ignore
                           }
                         }}
