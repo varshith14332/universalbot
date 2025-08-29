@@ -61,6 +61,10 @@ export default function Settings() {
     "settings.ttsAutoPlay",
     false,
   );
+  const [fastMode, setFastMode] = useLocalStorage<boolean>(
+    "settings.fastMode",
+    false,
+  );
   const [ocrLang, setOcrLang] = useLocalStorage<string>(
     "settings.ocrLang",
     "eng",
@@ -318,13 +322,7 @@ export default function Settings() {
                   <Label>Fast mode</Label>
                   <p className="text-xs text-muted-foreground">Shorter, quicker AI replies (lower token limit).</p>
                 </div>
-                <Switch
-                  checked={useLocalStorage<boolean>("settings.fastMode", false)[0]}
-                  onCheckedChange={(v) => {
-                    const [_, set] = useLocalStorage<boolean>("settings.fastMode", false);
-                    set(v);
-                  }}
-                />
+                <Switch checked={fastMode} onCheckedChange={setFastMode} />
               </div>
             </CardContent>
           </Card>
