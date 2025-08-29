@@ -34,11 +34,6 @@ export default function Index() {
                 Try Chatbot
               </Button>
             </Link>
-            <Link to="/duolingo">
-              <Button size="lg" variant="outline" className="px-8 py-3 text-lg">
-                Duolingo Mode
-              </Button>
-            </Link>
             <Link to="/login">
               <Button
                 size="lg"

@@ -15,7 +15,6 @@ import {
   HandIcon,
   Menu,
   Home,
-  GraduationCap,
   Settings,
 } from "lucide-react";
 
@@ -79,12 +78,6 @@ export default function Chatbot() {
             <Button variant="ghost" className="w-full justify-start">
               <Home className="mr-2 h-4 w-4" />
               Home
-            </Button>
-          </Link>
-          <Link to="/duolingo">
-            <Button variant="ghost" className="w-full justify-start">
-              <GraduationCap className="mr-2 h-4 w-4" />
-              Duolingo Mode
             </Button>
           </Link>
           <Button variant="ghost" className="w-full justify-start">
