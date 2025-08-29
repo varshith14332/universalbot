@@ -805,6 +805,59 @@ export default function Chatbot() {
                       >
                         {ocrLoading ? "Processing..." : "Capture & Extract"}
                       </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const dataUrl = reader.result as string;
+                            setLastImage(dataUrl);
+                          };
+                          reader.readAsDataURL(f);
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Upload Image
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          if (!lastImage) return;
+                          try {
+                            setCaptionLoading(true);
+                            const res = await fetch("/api/image-to-text", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ imageBase64: lastImage }),
+                            });
+                            const data = await res.json();
+                            const caption: string = data?.caption || "";
+                            if (caption) {
+                              const botResponse: Message = {
+                                id: (Date.now() + 5).toString(),
+                                content: `Image description: ${caption}`,
+                                isUser: false,
+                                timestamp: new Date(),
+                              };
+                              setMessages((prev) => [...prev, botResponse]);
+                              setInputMessage((prev) => (prev ? prev + " " : "") + caption);
+                            }
+                          } finally {
+                            setCaptionLoading(false);
+                          }
+                        }}
+                        disabled={captionLoading || !lastImage}
+                      >
+                        {captionLoading ? "Describing..." : "Describe (HF)"}
+                      </Button>
                       <Button
                         variant="outline"
                         onClick={() => {
