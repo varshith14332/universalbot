@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Send,
   Mic,
@@ -37,6 +37,8 @@ export default function Chatbot() {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -82,6 +84,48 @@ export default function Chatbot() {
     }
   };
 
+  const toggleSpeechToText = () => {
+    const w = typeof window !== "undefined" ? (window as any) : null;
+    if (!w) return;
+
+    if (isRecording && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setInputMessage("Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => {
+      const transcript = event.results?.[0]?.[0]?.transcript ?? "";
+      if (transcript) setInputMessage(transcript);
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    setIsRecording(true);
+    try {
+      recognition.start();
+    } catch {
+      setIsRecording(false);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       sendMessage();
@@ -107,6 +151,14 @@ export default function Chatbot() {
       </div>
     </div>
   );
+
+  useEffect(() => {
+    return () => {
+      try {
+        recognitionRef.current?.stop?.();
+      } catch {}
+    };
+  }, []);
 
   return (
     <Layout>
@@ -135,9 +187,9 @@ export default function Chatbot() {
           {/* Feature Buttons */}
           <div className="p-4 border-b">
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={toggleSpeechToText}>
                 <Mic className="mr-2 h-4 w-4" />
-                Speech-to-Text
+                {isRecording ? "Listening..." : "Speech-to-Text"}
               </Button>
               <Button variant="outline" size="sm">
                 <Volume2 className="mr-2 h-4 w-4" />
