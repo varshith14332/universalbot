@@ -206,7 +206,8 @@ export default function Sign() {
       const res = await fetch("/api/sign", { method: "POST", body: fd });
       const data = await res.json().catch(() => ({}));
       let text = "";
-      if (typeof data?.label === "string") text = data.label;
+      if (typeof data?.sign_text === "string") text = data.sign_text;
+      else if (typeof data?.label === "string") text = data.label;
       else if (typeof data?.prediction === "string") text = data.prediction;
       else if (typeof data?.result === "string") text = data.result;
       else if (typeof data?.raw === "string") text = data.raw;
