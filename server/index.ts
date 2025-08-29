@@ -41,6 +41,9 @@ export function createServer() {
   app.post("/api/image-to-text-upload", upload.single("image"), handleImageToTextUpload);
   app.post("/api/caption", upload.single("image"), handleCaption);
 
+  // Sign server proxy
+  app.post("/api/sign", signUpload, handleSignProxy);
+
   // TTS proxy (GET or POST)
   app.get("/api/tts", handleTTS);
   app.post("/api/tts", handleTTS);
