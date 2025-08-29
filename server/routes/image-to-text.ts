@@ -41,11 +41,12 @@ export const handleImageToText: RequestHandler = async (req, res) => {
     }
 
     const url = `${HF_API_BASE}/${encodeURIComponent(model)}`;
-    const upstream = await fetch(url, {
+    const upstream = await fetch(`${url}?wait_for_model=true`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/octet-stream",
+        "x-wait-for-model": "true",
       },
       body: buf,
     });
