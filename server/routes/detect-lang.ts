@@ -27,11 +27,17 @@ export const handleDetectLang: RequestHandler = async (req, res) => {
     }
 
     const detections = await response.json();
-    const top = Array.isArray(detections) && detections.length > 0
-      ? detections.reduce((a: any, b: any) => (a.confidence > b.confidence ? a : b))
-      : null;
+    const top =
+      Array.isArray(detections) && detections.length > 0
+        ? detections.reduce((a: any, b: any) =>
+            a.confidence > b.confidence ? a : b,
+          )
+        : null;
 
-    res.json({ language: top?.language ?? null, confidence: top?.confidence ?? null });
+    res.json({
+      language: top?.language ?? null,
+      confidence: top?.confidence ?? null,
+    });
   } catch (e) {
     res.status(500).json({ error: "Unexpected server error" });
   }

@@ -159,7 +159,9 @@ export default function Chatbot() {
     if (!w?.speechSynthesis) return null;
     const voices = w.speechSynthesis.getVoices?.() || [];
     if (!code) return voices[0] || null;
-    const primary = voices.find((v: SpeechSynthesisVoice) => v.lang?.toLowerCase().startsWith(code.toLowerCase()));
+    const primary = voices.find((v: SpeechSynthesisVoice) =>
+      v.lang?.toLowerCase().startsWith(code.toLowerCase()),
+    );
     return primary || voices[0] || null;
   };
 
@@ -250,7 +252,9 @@ export default function Chatbot() {
         });
         const data = await res.json();
         setDetectedLang(data?.language ?? null);
-        setDetectConf(typeof data?.confidence === "number" ? data.confidence : null);
+        setDetectConf(
+          typeof data?.confidence === "number" ? data.confidence : null,
+        );
       } catch (e: any) {
         if (e?.name !== "AbortError") {
           setDetectedLang(null);
@@ -263,7 +267,9 @@ export default function Chatbot() {
     return () => {
       clearTimeout(t);
       if (started) {
-        try { controller.abort(); } catch {}
+        try {
+          controller.abort();
+        } catch {}
       }
     };
   }, [inputMessage]);
@@ -358,8 +364,13 @@ export default function Chatbot() {
           <div className="p-4 border-t">
             <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
               <span>
-                Detected language: {detecting ? "Detecting..." : `${langName(detectedLang)}${detectedLang ? ` (${detectedLang})` : ""}`}
-                {detectConf != null ? ` • ${(detectConf * 100).toFixed(0)}%` : ""}
+                Detected language:{" "}
+                {detecting
+                  ? "Detecting..."
+                  : `${langName(detectedLang)}${detectedLang ? ` (${detectedLang})` : ""}`}
+                {detectConf != null
+                  ? ` • ${(detectConf * 100).toFixed(0)}%`
+                  : ""}
               </span>
             </div>
             <div className="flex gap-2">
