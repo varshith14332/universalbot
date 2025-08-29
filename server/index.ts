@@ -7,6 +7,8 @@ import { handleDetectLang } from "./routes/detect-lang";
 import { handleTranslate } from "./routes/translate";
 import { handleTTS } from "./routes/tts";
 import { handleImageToText } from "./routes/image-to-text";
+import multer from "multer";
+import { handleImageToTextUpload } from "./routes/image-to-text-upload";
 
 export function createServer() {
   const app = express();
