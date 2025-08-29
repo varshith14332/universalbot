@@ -48,6 +48,9 @@ export function Layout({ children }: LayoutProps) {
             <Link to="/login">
               <Button variant="outline">Login</Button>
             </Link>
+            <Link to="/login">
+              <Button>Sign in</Button>
+            </Link>
             <ModeToggle />
           </div>
         </div>
