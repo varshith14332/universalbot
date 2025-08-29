@@ -42,6 +42,17 @@ export function Layout({ children }: LayoutProps) {
               >
                 Chatbot
               </Link>
+              <Link
+                to="/settings"
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  isActive("/settings")
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                Settings
+              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
