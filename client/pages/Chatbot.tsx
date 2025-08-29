@@ -295,6 +295,11 @@ export default function Chatbot() {
     }
   };
 
+  const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
+    const res = await fetch(dataUrl);
+    return await res.blob();
+  };
+
   const ocrOnDataUrl = async (dataUrl: string): Promise<string> => {
     try {
       if (!(window as any).Tesseract) {
@@ -938,15 +943,18 @@ export default function Chatbot() {
                               if (!up.ok) throw new Error("caption-upload-failed");
                               const dataUp = await up.json();
                               caption = (dataUp?.caption || "").trim();
-                            } else {
-                              const res = await fetch("/api/image-to-text", {
+                            } else if (lastImage) {
+                              // Convert dataURL capture to Blob and upload
+                              const blob = await dataUrlToBlob(lastImage);
+                              const fd = new FormData();
+                              fd.append("image", blob, "capture.png");
+                              const up = await fetch("/api/image-to-text-upload", {
                                 method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ imageBase64: lastImage }),
+                                body: fd,
                               });
-                              if (!res.ok) throw new Error("caption-failed");
-                              const data = await res.json();
-                              caption = (data?.caption || "").trim();
+                              if (!up.ok) throw new Error("caption-upload-failed");
+                              const dataUp = await up.json();
+                              caption = (dataUp?.caption || "").trim();
                             }
                             // OCR on the same image
                             const ocrText = await ocrOnDataUrl(lastImage);
