@@ -41,7 +41,9 @@ export const handleChat: RequestHandler = async (req, res) => {
     const data = await response.json();
     const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-      data?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text).join("\n") ??
+      data?.candidates?.[0]?.content?.parts
+        ?.map((p: any) => p?.text)
+        .join("\n") ??
       "";
 
     res.json({ reply });

@@ -62,9 +62,10 @@ export default function Chatbot() {
         body: JSON.stringify({ prompt: newMessage.content }),
       });
       const data = await res.json();
-      const replyText = typeof data?.reply === "string" && data.reply.trim()
-        ? data.reply
-        : "Sorry, I couldn't generate a reply.";
+      const replyText =
+        typeof data?.reply === "string" && data.reply.trim()
+          ? data.reply
+          : "Sorry, I couldn't generate a reply.";
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: replyText,
@@ -109,7 +110,7 @@ export default function Chatbot() {
       }
     } catch (e) {
       setInputMessage(
-        "Microphone permission denied or blocked. Use Open Preview and allow microphone."
+        "Microphone permission denied or blocked. Use Open Preview and allow microphone.",
       );
       return;
     }
@@ -128,7 +129,9 @@ export default function Chatbot() {
         }
       }
       if (finalTranscript.trim()) {
-        setInputMessage((prev) => (prev ? prev + " " : "") + finalTranscript.trim());
+        setInputMessage(
+          (prev) => (prev ? prev + " " : "") + finalTranscript.trim(),
+        );
         finalTranscript = "";
       }
     };
@@ -158,7 +161,10 @@ export default function Chatbot() {
       w.speechSynthesis.cancel();
     } catch {}
 
-    const textToSpeak = inputMessage.trim() || [...messages].reverse().find((m) => !m.isUser)?.content || "";
+    const textToSpeak =
+      inputMessage.trim() ||
+      [...messages].reverse().find((m) => !m.isUser)?.content ||
+      "";
     if (!textToSpeak) return;
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -240,7 +246,12 @@ export default function Chatbot() {
                 <Mic className="mr-2 h-4 w-4" />
                 {isRecording ? "Listening..." : "Speech-to-Text"}
               </Button>
-              <Button variant="outline" size="sm" onClick={speakText} disabled={isSpeaking}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={speakText}
+                disabled={isSpeaking}
+              >
                 <Volume2 className="mr-2 h-4 w-4" />
                 {isSpeaking ? "Speaking..." : "Text-to-Speech"}
               </Button>

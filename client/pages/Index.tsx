@@ -8,9 +8,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { Layout } from "@/components/layout";
-import { MessageSquare, Volume2, Languages, HandIcon, Mic, Globe2, PlayCircle } from "lucide-react";
+import {
+  MessageSquare,
+  Volume2,
+  Languages,
+  HandIcon,
+  Mic,
+  Globe2,
+  PlayCircle,
+} from "lucide-react";
 
 export default function Index() {
   return (
@@ -144,7 +157,10 @@ export default function Index() {
               <TabsTrigger value="chat" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" /> Chat
               </TabsTrigger>
-              <TabsTrigger value="translate" className="flex items-center gap-2">
+              <TabsTrigger
+                value="translate"
+                className="flex items-center gap-2"
+              >
                 <Globe2 className="h-4 w-4" /> Translate
               </TabsTrigger>
               <TabsTrigger value="tts" className="flex items-center gap-2">
@@ -155,12 +171,18 @@ export default function Index() {
               <Card>
                 <CardHeader>
                   <CardTitle>Conversational AI</CardTitle>
-                  <CardDescription>Natural, contextual chat experience</CardDescription>
+                  <CardDescription>
+                    Natural, contextual chat experience
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-3">
-                    <div className="rounded-md border px-3 py-2 bg-muted/40">Hi! How can I help?</div>
-                    <div className="rounded-md border px-3 py-2">Translate "Hello" to Spanish</div>
+                    <div className="rounded-md border px-3 py-2 bg-muted/40">
+                      Hi! How can I help?
+                    </div>
+                    <div className="rounded-md border px-3 py-2">
+                      Translate "Hello" to Spanish
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -169,12 +191,18 @@ export default function Index() {
               <Card>
                 <CardHeader>
                   <CardTitle>Instant Translation</CardTitle>
-                  <CardDescription>Over 100 languages supported</CardDescription>
+                  <CardDescription>
+                    Over 100 languages supported
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-3 md:grid-cols-2">
-                    <div className="rounded-md border p-3">Hello, how are you?</div>
-                    <div className="rounded-md border p-3 bg-primary/10">Hola, ¿cómo estás?</div>
+                    <div className="rounded-md border p-3">
+                      Hello, how are you?
+                    </div>
+                    <div className="rounded-md border p-3 bg-primary/10">
+                      Hola, ¿cómo estás?
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -205,28 +233,37 @@ export default function Index() {
       <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Frequently Asked Questions
+            </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Find quick answers about features, pricing, and privacy.
             </p>
           </div>
           <Accordion type="single" collapsible className="max-w-3xl mx-auto">
             <AccordionItem value="item-1">
-              <AccordionTrigger>Is my data private and secure?</AccordionTrigger>
+              <AccordionTrigger>
+                Is my data private and secure?
+              </AccordionTrigger>
               <AccordionContent>
-                Yes. We never sell your data and follow strict security practices. You control what is stored.
+                Yes. We never sell your data and follow strict security
+                practices. You control what is stored.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-              <AccordionTrigger>Which languages are supported?</AccordionTrigger>
+              <AccordionTrigger>
+                Which languages are supported?
+              </AccordionTrigger>
               <AccordionContent>
-                We support 100+ languages for translation and voice. More are added continuously.
+                We support 100+ languages for translation and voice. More are
+                added continuously.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
               <AccordionTrigger>Can I use it on mobile?</AccordionTrigger>
               <AccordionContent>
-                Absolutely. Universal Bot is responsive and works on all modern devices.
+                Absolutely. Universal Bot is responsive and works on all modern
+                devices.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
