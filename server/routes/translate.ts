@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 
-const DEFAULT_BASE = process.env.LIBRETRANSLATE_URL || "https://libretranslate.de";
+const DEFAULT_BASE =
+  process.env.LIBRETRANSLATE_URL || "https://libretranslate.de";
 
 export const handleTranslate: RequestHandler = async (req, res) => {
   try {
