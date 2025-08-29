@@ -926,15 +926,28 @@ export default function Chatbot() {
                           if (!lastImage) return;
                           try {
                             setCaptionLoading(true);
-                            // Caption
-                            const res = await fetch("/api/image-to-text", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ imageBase64: lastImage }),
-                            });
-                            if (!res.ok) throw new Error("caption-failed");
-                            const data = await res.json();
-                            const caption: string = (data?.caption || "").trim();
+                            // Caption (prefer multipart upload for best quality)
+                            let caption = "";
+                            if (lastFile) {
+                              const fd = new FormData();
+                              fd.append("image", lastFile);
+                              const up = await fetch("/api/image-to-text-upload", {
+                                method: "POST",
+                                body: fd,
+                              });
+                              if (!up.ok) throw new Error("caption-upload-failed");
+                              const dataUp = await up.json();
+                              caption = (dataUp?.caption || "").trim();
+                            } else {
+                              const res = await fetch("/api/image-to-text", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ imageBase64: lastImage }),
+                              });
+                              if (!res.ok) throw new Error("caption-failed");
+                              const data = await res.json();
+                              caption = (data?.caption || "").trim();
+                            }
                             // OCR on the same image
                             const ocrText = await ocrOnDataUrl(lastImage);
                             const combined = caption
