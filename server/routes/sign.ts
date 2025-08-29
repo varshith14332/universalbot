@@ -21,7 +21,10 @@ export const handleSignProxy: RequestHandler = async (req, res) => {
     if (file?.buffer?.length) {
       // Forward as raw image bytes
       body = file.buffer as unknown as BodyInit;
-      const ct = file.mimetype && typeof file.mimetype === "string" ? file.mimetype : "application/octet-stream";
+      const ct =
+        file.mimetype && typeof file.mimetype === "string"
+          ? file.mimetype
+          : "application/octet-stream";
       headers["Content-Type"] = ct;
     } else if (req.is("application/octet-stream")) {
       body = req.body as any;
@@ -38,10 +41,20 @@ export const handleSignProxy: RequestHandler = async (req, res) => {
     const upstream = await fetch(url, { method: "POST", headers, body });
     const text = await upstream.text();
     let json: any;
-    try { json = JSON.parse(text); } catch { json = { raw: text }; }
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = { raw: text };
+    }
 
     if (!upstream.ok) {
-      res.status(502).json({ error: "Sign server error", status: upstream.status, detail: json });
+      res
+        .status(502)
+        .json({
+          error: "Sign server error",
+          status: upstream.status,
+          detail: json,
+        });
       return;
     }
 

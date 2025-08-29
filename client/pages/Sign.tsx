@@ -193,7 +193,9 @@ export default function Sign() {
   const grabFrameBlob = async (): Promise<Blob | null> => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
-    return await new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85));
+    return await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+    );
   };
 
   const sendCurrentFrame = async () => {

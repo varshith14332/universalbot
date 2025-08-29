@@ -8,7 +8,12 @@ const MODEL_PREFERENCE = [
   "microsoft/git-large-coco",
 ].filter(Boolean) as string[];
 
-async function requestCaption(token: string, model: string, buf: Buffer, contentType?: string): Promise<string> {
+async function requestCaption(
+  token: string,
+  model: string,
+  buf: Buffer,
+  contentType?: string,
+): Promise<string> {
   const url = `${HF_API_BASE}/${encodeURI(model)}?wait_for_model=true&use_cache=true`;
   const upstream = await fetch(url, {
     method: "POST",
@@ -22,16 +27,29 @@ async function requestCaption(token: string, model: string, buf: Buffer, content
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");
-    throw Object.assign(new Error(`HF ${upstream.status}`), { status: upstream.status, detail });
+    throw Object.assign(new Error(`HF ${upstream.status}`), {
+      status: upstream.status,
+      detail,
+    });
   }
   try {
     const data = await upstream.json();
     if (Array.isArray(data) && data.length) {
       const first = data[0];
-      const cap = (first?.generated_text || first?.caption || first?.summary_text || "").toString();
+      const cap = (
+        first?.generated_text ||
+        first?.caption ||
+        first?.summary_text ||
+        ""
+      ).toString();
       if (cap) return cap;
     } else if (data && typeof data === "object") {
-      const cap = (data.generated_text || data.caption || data.summary_text || "").toString();
+      const cap = (
+        data.generated_text ||
+        data.caption ||
+        data.summary_text ||
+        ""
+      ).toString();
       if (cap) return cap;
     }
     return JSON.stringify(data);
@@ -43,7 +61,10 @@ async function requestCaption(token: string, model: string, buf: Buffer, content
 
 export const handleImageToTextUpload: RequestHandler = async (req, res) => {
   try {
-    const token = process.env.HF_TOKEN || process.env.HUGGING_FACE_TOKEN || process.env.HF_API_TOKEN;
+    const token =
+      process.env.HF_TOKEN ||
+      process.env.HUGGING_FACE_TOKEN ||
+      process.env.HF_API_TOKEN;
     if (!token) {
       res.status(500).json({ error: "Missing Hugging Face token (HF_TOKEN)" });
       return;
@@ -55,12 +76,19 @@ export const handleImageToTextUpload: RequestHandler = async (req, res) => {
       return;
     }
 
-    const preferred = MODEL_PREFERENCE.length ? MODEL_PREFERENCE : ["nlpconnect/vit-gpt2-image-captioning"];
+    const preferred = MODEL_PREFERENCE.length
+      ? MODEL_PREFERENCE
+      : ["nlpconnect/vit-gpt2-image-captioning"];
     let lastErr: any = null;
-    const ct = (file.mimetype && typeof file.mimetype === "string") ? file.mimetype : undefined;
+    const ct =
+      file.mimetype && typeof file.mimetype === "string"
+        ? file.mimetype
+        : undefined;
     for (const model of preferred) {
       try {
-        const cap = (await requestCaption(token, model, file.buffer, ct)).trim();
+        const cap = (
+          await requestCaption(token, model, file.buffer, ct)
+        ).trim();
         if (cap) {
           res.json({ caption: cap, model });
           return;
@@ -71,7 +99,13 @@ export const handleImageToTextUpload: RequestHandler = async (req, res) => {
       }
     }
     const status = (lastErr?.status as number) || 502;
-    res.status(502).json({ error: "Hugging Face request failed", status, detail: lastErr?.detail || String(lastErr || "") });
+    res
+      .status(502)
+      .json({
+        error: "Hugging Face request failed",
+        status,
+        detail: lastErr?.detail || String(lastErr || ""),
+      });
   } catch (err) {
     res.status(500).json({ error: "Unexpected server error" });
   }

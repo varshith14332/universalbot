@@ -38,7 +38,11 @@ export function createServer() {
 
   // Multipart upload variant for best quality
   const upload = multer({ storage: multer.memoryStorage() });
-  app.post("/api/image-to-text-upload", upload.single("image"), handleImageToTextUpload);
+  app.post(
+    "/api/image-to-text-upload",
+    upload.single("image"),
+    handleImageToTextUpload,
+  );
   app.post("/api/caption", upload.single("image"), handleCaption);
 
   // Sign server proxy

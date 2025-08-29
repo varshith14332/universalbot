@@ -300,7 +300,10 @@ export default function Chatbot() {
     return await res.blob();
   };
 
-  const describeFromSource = async (file?: File | null, dataUrl?: string | null) => {
+  const describeFromSource = async (
+    file?: File | null,
+    dataUrl?: string | null,
+  ) => {
     if (!file && !dataUrl) return;
     try {
       setCaptionLoading(true);
@@ -364,7 +367,8 @@ export default function Chatbot() {
       if (!(window as any).Tesseract) {
         await new Promise<void>((resolve, reject) => {
           const s = document.createElement("script");
-          s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+          s.src =
+            "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
           s.onload = () => resolve();
           s.onerror = () => reject(new Error("Failed to load OCR"));
           document.head.appendChild(s);
@@ -372,18 +376,17 @@ export default function Chatbot() {
       }
       const { Tesseract } = window as any;
       const ocr = readSetting<string>("settings.ocrLang", "eng");
-      const result = await Tesseract.recognize(
-        dataUrl,
-        ocr,
-        {
-          tessedit_char_whitelist:
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -'",
-          preserve_interword_spaces: "1",
-          tessedit_pageseg_mode: "6",
-        },
-      );
+      const result = await Tesseract.recognize(dataUrl, ocr, {
+        tessedit_char_whitelist:
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -'",
+        preserve_interword_spaces: "1",
+        tessedit_pageseg_mode: "6",
+      });
       const text = (result?.data?.text || "").trim();
-      const conf = typeof result?.data?.confidence === "number" ? result.data.confidence : 0;
+      const conf =
+        typeof result?.data?.confidence === "number"
+          ? result.data.confidence
+          : 0;
       if (!text) return "";
       if (conf < 60) return ""; // suppress low-confidence gibberish
       return text;
@@ -910,10 +913,17 @@ export default function Chatbot() {
                           );
                           // Simple preprocessing to improve OCR accuracy
                           try {
-                            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const img = ctx.getImageData(
+                              0,
+                              0,
+                              canvas.width,
+                              canvas.height,
+                            );
                             const d = img.data;
                             for (let i = 0; i < d.length; i += 4) {
-                              const r = d[i], g = d[i + 1], b = d[i + 2];
+                              const r = d[i],
+                                g = d[i + 1],
+                                b = d[i + 2];
                               let v = 0.2126 * r + 0.7152 * g + 0.0722 * b; // grayscale
                               v = v * 1.2 - 20; // contrast/brightness tweak
                               v = v < 0 ? 0 : v > 255 ? 255 : v;
@@ -986,7 +996,10 @@ export default function Chatbot() {
                             setLastImage(dataUrl);
                             setLastFile(f);
                             await describeFromSource(f, dataUrl);
-                            try { if (fileInputRef.current) (fileInputRef.current as any).value = ""; } catch {}
+                            try {
+                              if (fileInputRef.current)
+                                (fileInputRef.current as any).value = "";
+                            } catch {}
                           };
                           reader.readAsDataURL(f);
                         }}
@@ -1008,11 +1021,15 @@ export default function Chatbot() {
                             if (lastFile) {
                               const fd = new FormData();
                               fd.append("image", lastFile);
-                              const up = await fetch("/api/image-to-text-upload", {
-                                method: "POST",
-                                body: fd,
-                              });
-                              if (!up.ok) throw new Error("caption-upload-failed");
+                              const up = await fetch(
+                                "/api/image-to-text-upload",
+                                {
+                                  method: "POST",
+                                  body: fd,
+                                },
+                              );
+                              if (!up.ok)
+                                throw new Error("caption-upload-failed");
                               const dataUp = await up.json();
                               caption = (dataUp?.caption || "").trim();
                             } else if (lastImage) {
@@ -1020,11 +1037,15 @@ export default function Chatbot() {
                               const blob = await dataUrlToBlob(lastImage);
                               const fd = new FormData();
                               fd.append("image", blob, "capture.png");
-                              const up = await fetch("/api/image-to-text-upload", {
-                                method: "POST",
-                                body: fd,
-                              });
-                              if (!up.ok) throw new Error("caption-upload-failed");
+                              const up = await fetch(
+                                "/api/image-to-text-upload",
+                                {
+                                  method: "POST",
+                                  body: fd,
+                                },
+                              );
+                              if (!up.ok)
+                                throw new Error("caption-upload-failed");
                               const dataUp = await up.json();
                               caption = (dataUp?.caption || "").trim();
                             }
@@ -1087,7 +1108,8 @@ export default function Chatbot() {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Tip: Use "Describe (HF)" for scene/product descriptions. Use OCR to read printed text in the image.
+                      Tip: Use "Describe (HF)" for scene/product descriptions.
+                      Use OCR to read printed text in the image.
                     </p>
                   </div>
                 </DialogContent>
