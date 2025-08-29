@@ -88,6 +88,15 @@ export default function Chatbot() {
     return null;
   };
 
+  const readSetting = <T,>(key: string, fallback: T): T => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) as T) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -109,6 +118,7 @@ export default function Chatbot() {
         body: JSON.stringify({
           prompt: newMessage.content,
           context: usecase?.context ?? "",
+          fast: readSetting<boolean>("settings.fastMode", false),
         }),
       });
       const data = await res.json();
@@ -118,7 +128,10 @@ export default function Chatbot() {
           : "Sorry, I couldn't generate a reply.";
 
       let finalText = replyText;
-      if (targetLang) {
+      const storedAuto = readSetting<boolean>("settings.autoTranslate", false);
+      const storedTL = readSetting<string | null>("settings.targetLang", null);
+      const effectiveTarget = targetLang ?? (storedAuto ? storedTL : null);
+      if (effectiveTarget) {
         try {
           const tr = await fetch("/api/translate", {
             method: "POST",
@@ -126,7 +139,7 @@ export default function Chatbot() {
             body: JSON.stringify({
               text: replyText,
               source: "auto",
-              target: targetLang,
+              target: effectiveTarget,
             }),
           });
           const trData = await tr.json();
@@ -405,10 +418,12 @@ export default function Chatbot() {
               Home
             </Button>
           </Link>
-          <Button variant="ghost" className="w-full justify-start">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
+          <Link to="/settings">
+            <Button variant="ghost" className="w-full justify-start">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
@@ -426,6 +441,17 @@ export default function Chatbot() {
       } catch {}
     };
   }, []);
+
+  useEffect(() => {
+    if (!ocrOpen) {
+      try {
+        const tracks = streamRef.current?.getTracks?.() || [];
+        tracks.forEach((t) => t.stop());
+        streamRef.current = null;
+        if (videoRef.current) (videoRef.current as any).srcObject = null;
+      } catch {}
+    }
+  }, [ocrOpen]);
 
   useEffect(() => {
     const text = inputMessage.trim();
@@ -530,9 +556,19 @@ export default function Chatbot() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" disabled={translating}>
                     <Languages className="mr-2 h-4 w-4" />
-                    {translating
-                      ? "Translating..."
-                      : `Translate${targetLang ? `: ${targetLang}` : ""}`}
+                    {(() => {
+                      if (translating) return "Translating...";
+                      const auto = readSetting<boolean>(
+                        "settings.autoTranslate",
+                        false,
+                      );
+                      const tl = readSetting<string | null>(
+                        "settings.targetLang",
+                        null,
+                      );
+                      const eff = targetLang ?? (auto ? tl : null);
+                      return `Translate${eff ? `: ${eff}` : ""}`;
+                    })()}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -691,14 +727,22 @@ export default function Chatbot() {
                         variant="outline"
                         onClick={async () => {
                           try {
+                            const constraints: MediaStreamConstraints = {
+                              video: { facingMode: { ideal: "environment" } },
+                              audio: false,
+                            };
                             const stream =
-                              await navigator.mediaDevices.getUserMedia({
-                                video: true,
-                              });
+                              await navigator.mediaDevices.getUserMedia(
+                                constraints,
+                              );
                             streamRef.current = stream;
-                            if (videoRef.current)
+                            if (videoRef.current) {
                               videoRef.current.srcObject = stream;
-                          } catch {
+                              try {
+                                await videoRef.current.play();
+                              } catch {}
+                            }
+                          } catch (e) {
                             // ignore
                           }
                         }}
@@ -737,9 +781,13 @@ export default function Chatbot() {
                               });
                             }
                             const { Tesseract } = window as any;
+                            const ocr = readSetting<string>(
+                              "settings.ocrLang",
+                              "eng",
+                            );
                             const result = await Tesseract.recognize(
                               dataUrl,
-                              detectedLang || "eng",
+                              ocr,
                             );
                             const text = result?.data?.text?.trim();
                             if (text)

@@ -23,6 +23,8 @@ export const handleChat: RequestHandler = async (req, res) => {
         ? `${context.trim()}\n\nUser: ${prompt}`
         : prompt;
 
+    const fast = Boolean(req.body?.fast);
+
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: "POST",
       headers: {
@@ -35,6 +37,16 @@ export const handleChat: RequestHandler = async (req, res) => {
             parts: [{ text: fullPrompt }],
           },
         ],
+        ...(fast
+          ? {
+              generationConfig: {
+                maxOutputTokens: 128,
+                temperature: 0.7,
+                topP: 0.95,
+                topK: 40,
+              },
+            }
+          : {}),
       }),
     });
 

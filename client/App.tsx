@@ -10,6 +10,7 @@ import Chatbot from "./pages/Chatbot";
 import { About, Contact, Privacy } from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 import Sign from "./pages/Sign";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ export default function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/sign" element={<Sign />} />
+              <Route path="/settings" element={<Settings />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
