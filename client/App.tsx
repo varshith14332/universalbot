@@ -40,4 +40,18 @@ const App = () => (
   </QueryClientProvider>
 );
 
-createRoot(document.getElementById("root")!).render(<App />);
+// Ensure createRoot is only called once
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Root element not found");
+}
+
+// Check if root already exists (for HMR)
+let root = (globalThis as any).__app_root;
+
+if (!root) {
+  root = createRoot(rootElement);
+  (globalThis as any).__app_root = root;
+}
+
+root.render(<App />);
