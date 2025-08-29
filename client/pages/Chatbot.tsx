@@ -36,8 +36,9 @@ export default function Chatbot() {
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!inputMessage.trim()) return;
 
     const newMessage: Message = {
@@ -49,18 +50,36 @@ export default function Chatbot() {
 
     setMessages((prev) => [...prev, newMessage]);
     setInputMessage("");
+    setIsSending(true);
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: newMessage.content }),
+      });
+      const data = await res.json();
+      const replyText = typeof data?.reply === "string" && data.reply.trim()
+        ? data.reply
+        : "Sorry, I couldn't generate a reply.";
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content:
-          "Thanks for your message! This is a demo response. In a real implementation, I would process your request and provide helpful assistance.",
+        content: replyText,
         isUser: false,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botResponse]);
-    }, 1000);
+    } catch (e) {
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "There was an error contacting the server.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -170,7 +189,7 @@ export default function Chatbot() {
                 onKeyPress={handleKeyPress}
                 className="flex-1"
               />
-              <Button onClick={sendMessage}>
+              <Button onClick={sendMessage} disabled={isSending}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
