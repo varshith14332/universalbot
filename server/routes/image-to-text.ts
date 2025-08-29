@@ -52,7 +52,7 @@ export const handleImageToText: RequestHandler = async (req, res) => {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/octet-stream",
+          "Content-Type": contentType || "application/octet-stream",
           Accept: "application/json",
           "x-wait-for-model": "true",
         },
