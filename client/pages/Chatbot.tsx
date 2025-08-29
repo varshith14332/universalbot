@@ -39,6 +39,9 @@ export default function Chatbot() {
   const [isSending, setIsSending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [detectedLang, setDetectedLang] = useState<string | null>(null);
+  const [detecting, setDetecting] = useState(false);
+  const [detectConf, setDetectConf] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
 
   const sendMessage = async () => {
@@ -116,7 +119,7 @@ export default function Chatbot() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    recognition.lang = detectedLang ? `${detectedLang}` : "en-US";
     recognition.interimResults = true;
     recognition.continuous = false;
     let finalTranscript = "";
@@ -151,6 +154,15 @@ export default function Chatbot() {
     }
   };
 
+  const pickVoice = (code: string | null) => {
+    const w = typeof window !== "undefined" ? (window as any) : null;
+    if (!w?.speechSynthesis) return null;
+    const voices = w.speechSynthesis.getVoices?.() || [];
+    if (!code) return voices[0] || null;
+    const primary = voices.find((v: SpeechSynthesisVoice) => v.lang?.toLowerCase().startsWith(code.toLowerCase()));
+    return primary || voices[0] || null;
+  };
+
   const speakText = () => {
     const w = typeof window !== "undefined" ? (window as any) : null;
     if (!w || !w.speechSynthesis) {
@@ -168,7 +180,9 @@ export default function Chatbot() {
     if (!textToSpeak) return;
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = "en-US";
+    if (detectedLang) utterance.lang = detectedLang;
+    const v = pickVoice(detectedLang);
+    if (v) utterance.voice = v;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -214,6 +228,49 @@ export default function Chatbot() {
       } catch {}
     };
   }, []);
+
+  useEffect(() => {
+    const text = inputMessage.trim();
+    if (!text) {
+      setDetectedLang(null);
+      setDetectConf(null);
+      return;
+    }
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        setDetecting(true);
+        const res = await fetch("/api/detect-lang", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        setDetectedLang(data?.language ?? null);
+        setDetectConf(typeof data?.confidence === "number" ? data.confidence : null);
+      } catch {
+        setDetectedLang(null);
+        setDetectConf(null);
+      } finally {
+        setDetecting(false);
+      }
+    }, 400);
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [inputMessage]);
+
+  const langName = (code: string | null) => {
+    if (!code) return "Unknown";
+    try {
+      const dn = new Intl.DisplayNames(["en"], { type: "language" });
+      return dn.of(code) || code;
+    } catch {
+      return code;
+    }
+  };
 
   return (
     <Layout>
@@ -293,6 +350,12 @@ export default function Chatbot() {
 
           {/* Input Area */}
           <div className="p-4 border-t">
+            <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
+              <span>
+                Detected language: {detecting ? "Detecting..." : `${langName(detectedLang)}${detectedLang ? ` (${detectedLang})` : ""}`}
+                {detectConf != null ? ` • ${(detectConf * 100).toFixed(0)}%` : ""}
+              </span>
+            </div>
             <div className="flex gap-2">
               <Input
                 placeholder="Type your message..."
