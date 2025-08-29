@@ -49,6 +49,7 @@ export default function Sign() {
   const [running, setRunning] = useState(false);
   const [recognized, setRecognized] = useState("...");
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const handsLoaded = useScript(
     "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js",
