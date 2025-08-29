@@ -34,6 +34,10 @@ export function createServer() {
   // POST { imageBase64: dataUrl | base64, model?: string }
   app.post("/api/image-to-text", handleImageToText);
 
+  // Multipart upload variant for best quality
+  const upload = multer({ storage: multer.memoryStorage() });
+  app.post("/api/image-to-text-upload", upload.single("image"), handleImageToTextUpload);
+
   // TTS proxy (GET or POST)
   app.get("/api/tts", handleTTS);
   app.post("/api/tts", handleTTS);
