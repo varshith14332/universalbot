@@ -80,11 +80,6 @@ export default function Chatbot() {
     setInputMessage("");
     setIsSending(true);
 
-    // If a target language is selected, translate the user's prompt and show it
-    if (targetLang) {
-      translateText(targetLang, newMessage.content);
-    }
-
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -96,9 +91,25 @@ export default function Chatbot() {
         typeof data?.reply === "string" && data.reply.trim()
           ? data.reply
           : "Sorry, I couldn't generate a reply.";
+
+      let finalText = replyText;
+      if (targetLang) {
+        try {
+          const tr = await fetch("/api/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: replyText, source: "auto", target: targetLang }),
+          });
+          const trData = await tr.json();
+          if (typeof trData?.translation === "string" && trData.translation.trim()) {
+            finalText = trData.translation;
+          }
+        } catch {}
+      }
+
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: replyText,
+        content: finalText,
         isUser: false,
         timestamp: new Date(),
       };
