@@ -47,7 +47,7 @@ export default function Chatbot() {
   const [detectConf, setDetectConf] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
   const [translating, setTranslating] = useState(false);
-  const [targetLang, setTargetLang] = useState<string>("en");
+  const [targetLang, setTargetLang] = useState<string | null>(null);
   const [ocrOpen, setOcrOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -66,6 +66,11 @@ export default function Chatbot() {
     setMessages((prev) => [...prev, newMessage]);
     setInputMessage("");
     setIsSending(true);
+
+    // If a target language is selected, translate the user's prompt and show it
+    if (targetLang) {
+      translateText(targetLang, newMessage.content);
+    }
 
     try {
       const res = await fetch("/api/chat", {
@@ -193,8 +198,9 @@ export default function Chatbot() {
     { code: "ta", name: "Tamil" },
   ];
 
-  const translateText = async (to: string) => {
-    const text = inputMessage.trim() || [...messages].reverse().find((m) => m.isUser)?.content || "";
+  const translateText = async (to: string, overrideText?: string) => {
+    const text = (overrideText ?? inputMessage.trim()) ||
+      [...messages].reverse().find((m) => m.isUser)?.content || "";
     if (!text) return;
     setTranslating(true);
     try {
@@ -383,6 +389,9 @@ export default function Chatbot() {
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Translate to</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setTargetLang(null)}>
+                    Off (disable auto-translate)
+                  </DropdownMenuItem>
                   {languages.map((l) => (
                     <DropdownMenuItem key={l.code} onClick={() => { setTargetLang(l.code); translateText(l.code); }}>
                       {l.name} ({l.code})
@@ -441,6 +450,12 @@ export default function Chatbot() {
                         } catch {}
                         setOcrLoading(false);
                       }} disabled={ocrLoading}>{ocrLoading ? 'Processing...' : 'Capture & Extract'}</Button>
+                      <Button variant="outline" onClick={() => {
+                        const tracks = streamRef.current?.getTracks?.() || [];
+                        tracks.forEach((t) => t.stop());
+                        streamRef.current = null;
+                        if (videoRef.current) (videoRef.current as any).srcObject = null;
+                      }}>Stop Camera</Button>
                     </div>
                   </div>
                 </DialogContent>
