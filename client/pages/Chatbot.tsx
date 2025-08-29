@@ -287,6 +287,7 @@ export default function Chatbot() {
           target: to,
         }),
       });
+      if (!res.ok) throw new Error("translate-failed");
       const data = await res.json();
       const translated: string = data?.translation || "";
       if (translated) {
@@ -298,6 +299,16 @@ export default function Chatbot() {
         };
         setMessages((prev) => [...prev, botResponse]);
       }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 9).toString(),
+          content: "Translation service unavailable.",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setTranslating(false);
     }
@@ -858,6 +869,7 @@ export default function Chatbot() {
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ imageBase64: lastImage }),
                             });
+                            if (!res.ok) throw new Error("caption-failed");
                             const data = await res.json();
                             const caption: string = data?.caption || "";
                             if (caption) {
@@ -869,7 +881,27 @@ export default function Chatbot() {
                               };
                               setMessages((prev) => [...prev, botResponse]);
                               setInputMessage((prev) => (prev ? prev + " " : "") + caption);
+                            } else {
+                              setMessages((prev) => [
+                                ...prev,
+                                {
+                                  id: (Date.now() + 10).toString(),
+                                  content: "Caption not available.",
+                                  isUser: false,
+                                  timestamp: new Date(),
+                                },
+                              ]);
                             }
+                          } catch {
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                id: (Date.now() + 11).toString(),
+                                content: "Image caption service unavailable.",
+                                isUser: false,
+                                timestamp: new Date(),
+                              },
+                            ]);
                           } finally {
                             setCaptionLoading(false);
                           }
