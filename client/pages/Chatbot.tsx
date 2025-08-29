@@ -118,6 +118,7 @@ export default function Chatbot() {
         body: JSON.stringify({
           prompt: newMessage.content,
           context: usecase?.context ?? "",
+          fast: readSetting<boolean>("settings.fastMode", false),
         }),
       });
       const data = await res.json();
