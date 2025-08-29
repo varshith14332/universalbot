@@ -12,10 +12,16 @@ export const handleChat: RequestHandler = async (req, res) => {
     }
 
     const prompt: unknown = req.body?.prompt;
+    const context: unknown = req.body?.context;
     if (typeof prompt !== "string" || !prompt.trim()) {
       res.status(400).json({ error: "Invalid prompt" });
       return;
     }
+
+    const fullPrompt =
+      typeof context === "string" && context.trim()
+        ? `${context.trim()}\n\nUser: ${prompt}`
+        : prompt;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: "POST",
@@ -26,7 +32,7 @@ export const handleChat: RequestHandler = async (req, res) => {
         contents: [
           {
             role: "user",
-            parts: [{ text: prompt }],
+            parts: [{ text: fullPrompt }],
           },
         ],
       }),
