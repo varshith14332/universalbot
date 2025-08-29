@@ -401,6 +401,7 @@ export default function Chatbot() {
         recognitionRef.current?.stop?.();
         const w = typeof window !== "undefined" ? (window as any) : null;
         w?.speechSynthesis?.cancel?.();
+        audioRef.current?.pause?.();
         const tracks = streamRef.current?.getTracks?.() || [];
         tracks.forEach((t) => t.stop());
       } catch {}
