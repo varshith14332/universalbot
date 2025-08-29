@@ -2,6 +2,10 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import { handleChat } from "./routes/chat";
+import { handleDetectLang } from "./routes/detect-lang";
+import { handleTranslate } from "./routes/translate";
+import { handleTTS } from "./routes/tts";
 
 export function createServer() {
   const app = express();
@@ -18,6 +22,14 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  app.post("/api/chat", handleChat);
+  app.post("/api/detect-lang", handleDetectLang);
+  app.post("/api/translate", handleTranslate);
+
+  // TTS proxy (GET or POST)
+  app.get("/api/tts", handleTTS);
+  app.post("/api/tts", handleTTS);
 
   return app;
 }

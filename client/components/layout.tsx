@@ -42,22 +42,14 @@ export function Layout({ children }: LayoutProps) {
               >
                 Chatbot
               </Link>
-              <Link
-                to="/duolingo"
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  isActive("/duolingo")
-                    ? "text-primary"
-                    : "text-muted-foreground",
-                )}
-              >
-                Duolingo Mode
-              </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
             <Link to="/login">
               <Button variant="outline">Login</Button>
+            </Link>
+            <Link to="/login">
+              <Button>Sign in</Button>
             </Link>
             <ModeToggle />
           </div>
