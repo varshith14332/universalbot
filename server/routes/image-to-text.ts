@@ -4,7 +4,8 @@ import type { RequestHandler } from "express";
 // Expects JSON body: { imageBase64: dataUrl | base64 string, model?: string }
 // Env: HF_TOKEN (required), HF_IMAGE_TO_TEXT_MODEL (optional)
 
-const DEFAULT_MODEL = process.env.HF_IMAGE_TO_TEXT_MODEL || "flax-community/vit-gpt2-coco-en";
+// Use a stronger captioning model by default for higher quality outputs
+const DEFAULT_MODEL = process.env.HF_IMAGE_TO_TEXT_MODEL || "Salesforce/blip-image-captioning-large";
 const HF_API_BASE = "https://api-inference.huggingface.co/models";
 
 function parseDataUrl(dataUrl: string): Buffer | null {
