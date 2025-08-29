@@ -266,7 +266,7 @@ export default function Settings() {
                       </SelectTrigger>
                       <SelectContent>
                         {voices.length === 0 ? (
-                          <SelectItem value="">System default</SelectItem>
+                          <SelectItem value="system-default" disabled>System default</SelectItem>
                         ) : (
                           voices.map((v) => (
                             <SelectItem key={v.voiceURI} value={v.voiceURI}>
