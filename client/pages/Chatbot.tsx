@@ -272,21 +272,88 @@ export default function Chatbot() {
     }
   };
 
-  const speakText = () => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const chunkText = (t: string, maxLen = 180) => {
+    const parts: string[] = [];
+    const sentences = t
+      .replace(/\s+/g, " ")
+      .split(/(?<=[.!?。！？])\s+/);
+    for (const s of sentences) {
+      if (s.length <= maxLen) {
+        if (s.trim()) parts.push(s.trim());
+      } else {
+        let start = 0;
+        while (start < s.length) {
+          parts.push(s.slice(start, start + maxLen));
+          start += maxLen;
+        }
+      }
+    }
+    return parts.length ? parts : [t];
+  };
+
+  const playWithServerTTS = async (text: string, lang: string) => {
+    const chunks = chunkText(text);
+    audioRef.current?.pause?.();
+    audioRef.current = new Audio();
+
+    for (let i = 0; i < chunks.length; i++) {
+      const q = encodeURIComponent(chunks[i]);
+      const l = encodeURIComponent(lang);
+      const res = await fetch(`/api/tts?text=${q}&lang=${l}`);
+      if (!res.ok) throw new Error("tts-failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      await new Promise<void>((resolve, reject) => {
+        if (!audioRef.current) {
+          reject(new Error("no-audio"));
+          return;
+        }
+        const a = audioRef.current;
+        const cleanup = () => {
+          a.onended = null;
+          a.onerror = null;
+          URL.revokeObjectURL(url);
+        };
+        a.src = url;
+        a.onended = () => { cleanup(); resolve(); };
+        a.onerror = () => { cleanup(); reject(new Error("play-error")); };
+        a.play().catch((e) => {
+          cleanup();
+          reject(e);
+        });
+      });
+    }
+  };
+
+  const speakText = async () => {
     const w = typeof window !== "undefined" ? (window as any) : null;
+    const textToSpeak =
+      inputMessage.trim() ||
+      [...messages].reverse().find((m) => !m.isUser)?.content ||
+      "";
+    if (!textToSpeak) return;
+
+    const lang = detectedLang || guessLang(textToSpeak) || "en";
+    setIsSpeaking(true);
+
+    // Try server-based TTS first for broader language coverage
+    try {
+      await playWithServerTTS(textToSpeak, lang);
+      setIsSpeaking(false);
+      return;
+    } catch {}
+
+    // Fallback to browser SpeechSynthesis
     if (!w || !w.speechSynthesis) {
+      setIsSpeaking(false);
       setInputMessage("Text-to-Speech not supported in this browser.");
       return;
     }
     try {
       w.speechSynthesis.cancel();
     } catch {}
-
-    const textToSpeak =
-      inputMessage.trim() ||
-      [...messages].reverse().find((m) => !m.isUser)?.content ||
-      "";
-    if (!textToSpeak) return;
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     if (detectedLang) utterance.lang = detectedLang;
