@@ -769,6 +769,7 @@ export default function Chatbot() {
                             canvas.height,
                           );
                           const dataUrl = canvas.toDataURL("image/png");
+                          setLastImage(dataUrl);
                           setOcrLoading(true);
                           try {
                             // Load Tesseract.js from CDN lazily
