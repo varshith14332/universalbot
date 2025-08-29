@@ -27,6 +27,12 @@ export function createServer() {
   app.post("/api/detect-lang", handleDetectLang);
   app.post("/api/translate", handleTranslate);
 
+  // Image Captioning (Image to Text)
+  // POST { imageBase64: dataUrl | base64, model?: string }
+  import("./routes/image-to-text").then(({ handleImageToText }) => {
+    app.post("/api/image-to-text", handleImageToText);
+  });
+
   // TTS proxy (GET or POST)
   app.get("/api/tts", handleTTS);
   app.post("/api/tts", handleTTS);
