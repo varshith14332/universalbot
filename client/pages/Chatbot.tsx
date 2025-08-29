@@ -237,8 +237,10 @@ export default function Chatbot() {
       return;
     }
     const controller = new AbortController();
+    let started = false;
     const t = setTimeout(async () => {
       try {
+        started = true;
         setDetecting(true);
         const res = await fetch("/api/detect-lang", {
           method: "POST",
@@ -249,16 +251,20 @@ export default function Chatbot() {
         const data = await res.json();
         setDetectedLang(data?.language ?? null);
         setDetectConf(typeof data?.confidence === "number" ? data.confidence : null);
-      } catch {
-        setDetectedLang(null);
-        setDetectConf(null);
+      } catch (e: any) {
+        if (e?.name !== "AbortError") {
+          setDetectedLang(null);
+          setDetectConf(null);
+        }
       } finally {
         setDetecting(false);
       }
     }, 400);
     return () => {
-      controller.abort();
       clearTimeout(t);
+      if (started) {
+        try { controller.abort(); } catch {}
+      }
     };
   }, [inputMessage]);
 
