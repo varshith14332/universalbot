@@ -310,6 +310,27 @@ export default function Settings() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Performance</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded border p-3">
+                <div>
+                  <Label>Fast mode</Label>
+                  <p className="text-xs text-muted-foreground">Shorter, quicker AI replies (lower token limit).</p>
+                </div>
+                <Switch
+                  checked={useLocalStorage<boolean>("settings.fastMode", false)[0]}
+                  onCheckedChange={(v) => {
+                    const [_, set] = useLocalStorage<boolean>("settings.fastMode", false);
+                    set(v);
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Permissions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
