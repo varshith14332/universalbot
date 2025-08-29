@@ -5,6 +5,7 @@ import { handleDemo } from "./routes/demo";
 import { handleChat } from "./routes/chat";
 import { handleDetectLang } from "./routes/detect-lang";
 import { handleTranslate } from "./routes/translate";
+import { handleTTS } from "./routes/tts";
 
 export function createServer() {
   const app = express();
