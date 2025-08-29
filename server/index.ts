@@ -28,7 +28,6 @@ export function createServer() {
   app.post("/api/translate", handleTranslate);
 
   // TTS proxy (GET or POST)
-  const { handleTTS } = require("./routes/tts");
   app.get("/api/tts", handleTTS);
   app.post("/api/tts", handleTTS);
 
