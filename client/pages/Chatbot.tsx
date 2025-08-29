@@ -992,6 +992,7 @@ export default function Chatbot() {
                             setLastImage(dataUrl);
                             setLastFile(f);
                             await describeFromSource(f, dataUrl);
+                            try { if (fileInputRef.current) (fileInputRef.current as any).value = ""; } catch {}
                           };
                           reader.readAsDataURL(f);
                         }}
