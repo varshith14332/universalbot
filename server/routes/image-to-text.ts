@@ -47,7 +47,7 @@ export const handleImageToText: RequestHandler = async (req, res) => {
     const preferred = MODEL_PREFERENCE.length ? MODEL_PREFERENCE : ["nlpconnect/vit-gpt2-image-captioning"];
 
     async function requestCaption(token: string, model: string, body: Buffer): Promise<string> {
-      const url = `${HF_API_BASE}/${encodeURIComponent(model)}?wait_for_model=true&use_cache=true`;
+      const url = `${HF_API_BASE}/${encodeURI(model)}?wait_for_model=true&use_cache=true`;
       const upstream = await fetch(url, {
         method: "POST",
         headers: {
