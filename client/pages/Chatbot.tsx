@@ -270,6 +270,59 @@ export default function Chatbot() {
     { code: "ta", name: "Tamil" },
   ];
 
+  const getEffectiveTarget = (): string | null => {
+    const auto = readSetting<boolean>("settings.autoTranslate", false);
+    const tl = readSetting<string | null>("settings.targetLang", null);
+    return targetLang ?? (auto ? tl : null);
+  };
+
+  const translateIfNeeded = async (text: string): Promise<string> => {
+    const to = getEffectiveTarget();
+    if (!to) return text;
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, source: "auto", target: to }),
+      });
+      if (!res.ok) return text;
+      const data = await res.json();
+      const translated: string = data?.translation || "";
+      return translated || text;
+    } catch {
+      return text;
+    }
+  };
+
+  const ocrOnDataUrl = async (dataUrl: string): Promise<string> => {
+    try {
+      if (!(window as any).Tesseract) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load OCR"));
+          document.head.appendChild(s);
+        });
+      }
+      const { Tesseract } = window as any;
+      const ocr = readSetting<string>("settings.ocrLang", "eng");
+      const result = await Tesseract.recognize(
+        dataUrl,
+        ocr,
+        {
+          tessedit_char_whitelist:
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -'",
+          preserve_interword_spaces: "1",
+          tessedit_pageseg_mode: "6",
+        },
+      );
+      return (result?.data?.text || "").trim();
+    } catch {
+      return "";
+    }
+  };
+
   const translateText = async (to: string, overrideText?: string) => {
     const text =
       (overrideText ?? inputMessage.trim()) ||
@@ -825,10 +878,16 @@ export default function Chatbot() {
                               },
                             );
                             const text = result?.data?.text?.trim();
-                            if (text)
-                              setInputMessage(
-                                (prev) => (prev ? prev + " " : "") + text,
-                              );
+                            if (text) {
+                              const final = await translateIfNeeded(text);
+                              const botResponse: Message = {
+                                id: (Date.now() + 6).toString(),
+                                content: final,
+                                isUser: false,
+                                timestamp: new Date(),
+                              };
+                              setMessages((prev) => [...prev, botResponse]);
+                            }
                           } catch {}
                           setOcrLoading(false);
                         }}
@@ -864,6 +923,7 @@ export default function Chatbot() {
                           if (!lastImage) return;
                           try {
                             setCaptionLoading(true);
+                            // Caption
                             const res = await fetch("/api/image-to-text", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
@@ -871,22 +931,29 @@ export default function Chatbot() {
                             });
                             if (!res.ok) throw new Error("caption-failed");
                             const data = await res.json();
-                            const caption: string = data?.caption || "";
-                            if (caption) {
+                            const caption: string = (data?.caption || "").trim();
+                            // OCR on the same image
+                            const ocrText = await ocrOnDataUrl(lastImage);
+                            const combined = caption
+                              ? ocrText
+                                ? `${caption}\n\n${ocrText}`
+                                : caption
+                              : ocrText;
+                            if (combined) {
+                              const final = await translateIfNeeded(combined);
                               const botResponse: Message = {
                                 id: (Date.now() + 5).toString(),
-                                content: `Image description: ${caption}`,
+                                content: final,
                                 isUser: false,
                                 timestamp: new Date(),
                               };
                               setMessages((prev) => [...prev, botResponse]);
-                              setInputMessage((prev) => (prev ? prev + " " : "") + caption);
                             } else {
                               setMessages((prev) => [
                                 ...prev,
                                 {
                                   id: (Date.now() + 10).toString(),
-                                  content: "Caption not available.",
+                                  content: "No description or text found.",
                                   isUser: false,
                                   timestamp: new Date(),
                                 },
@@ -897,7 +964,7 @@ export default function Chatbot() {
                               ...prev,
                               {
                                 id: (Date.now() + 11).toString(),
-                                content: "Image caption service unavailable.",
+                                content: "Image processing unavailable.",
                                 isUser: false,
                                 timestamp: new Date(),
                               },
