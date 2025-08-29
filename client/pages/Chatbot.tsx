@@ -65,6 +65,7 @@ export default function Chatbot() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [usecase, setUsecase] = useState<null | { key: string; title: string; description: string; context: string }>(null);
 
   const guessLang = (t: string): string | null => {
     const s = (t || "").trim();
@@ -100,7 +101,7 @@ export default function Chatbot() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: newMessage.content }),
+        body: JSON.stringify({ prompt: newMessage.content, context: usecase?.context ?? "" }),
       });
       const data = await res.json();
       const replyText =
