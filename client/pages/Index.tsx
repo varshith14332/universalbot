@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Layout } from "@/components/layout"
-import { MessageSquare, Volume2, Languages, HandIcon } from "lucide-react"
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Layout } from "@/components/layout";
+import { MessageSquare, Volume2, Languages, HandIcon } from "lucide-react";
 
 export default function Index() {
   return (
@@ -17,10 +23,11 @@ export default function Index() {
             Breaking Barriers in Communication
           </p>
           <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Experience seamless communication across all languages with our advanced AI-powered chatbot. 
-            From text to speech, speech to text, and real-time translation - Universal Bot connects the world.
+            Experience seamless communication across all languages with our
+            advanced AI-powered chatbot. From text to speech, speech to text,
+            and real-time translation - Universal Bot connects the world.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/chatbot">
               <Button size="lg" className="px-8 py-3 text-lg">
@@ -33,7 +40,11 @@ export default function Index() {
               </Button>
             </Link>
             <Link to="/login">
-              <Button size="lg" variant="secondary" className="px-8 py-3 text-lg">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="px-8 py-3 text-lg"
+              >
                 Login
               </Button>
             </Link>
@@ -49,7 +60,8 @@ export default function Index() {
               Powerful Features
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover the cutting-edge capabilities that make Universal Bot your perfect communication companion
+              Discover the cutting-edge capabilities that make Universal Bot
+              your perfect communication companion
             </p>
           </div>
 
@@ -64,7 +76,8 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Convert text to natural-sounding speech and speech back to text with high accuracy
+                  Convert text to natural-sounding speech and speech back to
+                  text with high accuracy
                 </CardDescription>
               </CardContent>
             </Card>
@@ -79,7 +92,8 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Advanced speech recognition that understands context and converts spoken words to precise text
+                  Advanced speech recognition that understands context and
+                  converts spoken words to precise text
                 </CardDescription>
               </CardContent>
             </Card>
@@ -94,7 +108,8 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Powered by Google Translate API for instant, accurate translation across 100+ languages
+                  Powered by Google Translate API for instant, accurate
+                  translation across 100+ languages
                 </CardDescription>
               </CardContent>
             </Card>
@@ -109,7 +124,8 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Revolutionary sign language recognition technology (coming soon) for inclusive communication
+                  Revolutionary sign language recognition technology (coming
+                  soon) for inclusive communication
                 </CardDescription>
               </CardContent>
             </Card>
@@ -124,8 +140,9 @@ export default function Index() {
             Ready to Break Communication Barriers?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join millions of users who trust Universal Bot for their communication needs. 
-            Start your journey towards seamless global communication today.
+            Join millions of users who trust Universal Bot for their
+            communication needs. Start your journey towards seamless global
+            communication today.
           </p>
           <Link to="/chatbot">
             <Button size="lg" className="px-8 py-3 text-lg">
@@ -135,5 +152,5 @@ export default function Index() {
         </div>
       </section>
     </Layout>
-  )
+  );
 }

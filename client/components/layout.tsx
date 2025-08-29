@@ -1,16 +1,16 @@
-import { Link, useLocation } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { ModeToggle } from "@/components/mode-toggle"
-import { cn } from "@/lib/utils"
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/mode-toggle";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
-  const location = useLocation()
+  const location = useLocation();
 
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
                 to="/"
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  isActive("/") ? "text-primary" : "text-muted-foreground"
+                  isActive("/") ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 Home
@@ -35,7 +35,9 @@ export function Layout({ children }: LayoutProps) {
                 to="/chatbot"
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  isActive("/chatbot") ? "text-primary" : "text-muted-foreground"
+                  isActive("/chatbot")
+                    ? "text-primary"
+                    : "text-muted-foreground",
                 )}
               >
                 Chatbot
@@ -44,7 +46,9 @@ export function Layout({ children }: LayoutProps) {
                 to="/duolingo"
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  isActive("/duolingo") ? "text-primary" : "text-muted-foreground"
+                  isActive("/duolingo")
+                    ? "text-primary"
+                    : "text-muted-foreground",
                 )}
               >
                 Duolingo Mode
@@ -61,9 +65,7 @@ export function Layout({ children }: LayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
-        {children}
-      </main>
+      <main className="flex-1">{children}</main>
 
       {/* Footer */}
       <footer className="border-t mt-auto">
@@ -73,13 +75,22 @@ export function Layout({ children }: LayoutProps) {
               © 2024 Universal Bot. All rights reserved.
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link to="/about" className="text-sm text-muted-foreground hover:text-primary">
+              <Link
+                to="/about"
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
                 About
               </Link>
-              <Link to="/contact" className="text-sm text-muted-foreground hover:text-primary">
+              <Link
+                to="/contact"
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
                 Contact
               </Link>
-              <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary">
+              <Link
+                to="/privacy"
+                className="text-sm text-muted-foreground hover:text-primary"
+              >
                 Privacy Policy
               </Link>
             </div>
@@ -87,5 +98,5 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </footer>
     </div>
-  )
+  );
 }

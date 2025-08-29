@@ -1,38 +1,44 @@
-import { Layout } from "@/components/layout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState } from "react"
+import { Layout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 
 export default function Login() {
   const [loginData, setLoginData] = useState({
     email: "",
-    password: ""
-  })
+    password: "",
+  });
 
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
-    confirmPassword: ""
-  })
+    confirmPassword: "",
+  });
 
   const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Login attempted with:", loginData)
+    e.preventDefault();
+    console.log("Login attempted with:", loginData);
     // TODO: Implement actual login logic
-  }
+  };
 
   const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (signupData.password !== signupData.confirmPassword) {
-      alert("Passwords don't match!")
-      return
+      alert("Passwords don't match!");
+      return;
     }
-    console.log("Signup attempted with:", signupData)
+    console.log("Signup attempted with:", signupData);
     // TODO: Implement actual signup logic
-  }
+  };
 
   return (
     <Layout>
@@ -40,7 +46,9 @@ export default function Login() {
         <div className="w-full max-w-md">
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold">Welcome to Universal Bot</CardTitle>
+              <CardTitle className="text-2xl font-bold">
+                Welcome to Universal Bot
+              </CardTitle>
               <CardDescription>
                 Sign in to your account or create a new one to get started
               </CardDescription>
@@ -51,7 +59,7 @@ export default function Login() {
                   <TabsTrigger value="login">Login</TabsTrigger>
                   <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="login" className="space-y-4">
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
@@ -61,7 +69,9 @@ export default function Login() {
                         type="email"
                         placeholder="Enter your email"
                         value={loginData.email}
-                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        onChange={(e) =>
+                          setLoginData({ ...loginData, email: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -72,7 +82,12 @@ export default function Login() {
                         type="password"
                         placeholder="Enter your password"
                         value={loginData.password}
-                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        onChange={(e) =>
+                          setLoginData({
+                            ...loginData,
+                            password: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -81,12 +96,15 @@ export default function Login() {
                     </Button>
                   </form>
                   <div className="text-center">
-                    <a href="#" className="text-sm text-muted-foreground hover:text-primary">
+                    <a
+                      href="#"
+                      className="text-sm text-muted-foreground hover:text-primary"
+                    >
                       Forgot your password?
                     </a>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="signup" className="space-y-4">
                   <form onSubmit={handleSignup} className="space-y-4">
                     <div className="space-y-2">
@@ -96,7 +114,12 @@ export default function Login() {
                         type="email"
                         placeholder="Enter your email"
                         value={signupData.email}
-                        onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                        onChange={(e) =>
+                          setSignupData({
+                            ...signupData,
+                            email: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -107,7 +130,12 @@ export default function Login() {
                         type="password"
                         placeholder="Create a password"
                         value={signupData.password}
-                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                        onChange={(e) =>
+                          setSignupData({
+                            ...signupData,
+                            password: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -118,7 +146,12 @@ export default function Login() {
                         type="password"
                         placeholder="Confirm your password"
                         value={signupData.confirmPassword}
-                        onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                        onChange={(e) =>
+                          setSignupData({
+                            ...signupData,
+                            confirmPassword: e.target.value,
+                          })
+                        }
                         required
                       />
                     </div>
@@ -145,5 +178,5 @@ export default function Login() {
         </div>
       </div>
     </Layout>
-  )
+  );
 }

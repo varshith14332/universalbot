@@ -1,72 +1,74 @@
-import { Layout } from "@/components/layout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Link } from "react-router-dom"
-import { useState } from "react"
-import { 
-  Send, 
-  Mic, 
-  Volume2, 
-  Languages, 
-  HandIcon, 
-  Menu, 
-  Home, 
-  GraduationCap, 
-  Settings 
-} from "lucide-react"
+import { Layout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import {
+  Send,
+  Mic,
+  Volume2,
+  Languages,
+  HandIcon,
+  Menu,
+  Home,
+  GraduationCap,
+  Settings,
+} from "lucide-react";
 
 interface Message {
-  id: string
-  content: string
-  isUser: boolean
-  timestamp: Date
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
 }
 
 export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! I'm Universal Bot. I can help you with text-to-speech, speech-to-text, translation, and more. How can I assist you today?",
+      content:
+        "Hello! I'm Universal Bot. I can help you with text-to-speech, speech-to-text, translation, and more. How can I assist you today?",
       isUser: false,
-      timestamp: new Date()
-    }
-  ])
-  const [inputMessage, setInputMessage] = useState("")
+      timestamp: new Date(),
+    },
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
 
   const sendMessage = () => {
-    if (!inputMessage.trim()) return
+    if (!inputMessage.trim()) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
       content: inputMessage,
       isUser: true,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    };
 
-    setMessages(prev => [...prev, newMessage])
-    setInputMessage("")
+    setMessages((prev) => [...prev, newMessage]);
+    setInputMessage("");
 
     // Simulate bot response
     setTimeout(() => {
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: "Thanks for your message! This is a demo response. In a real implementation, I would process your request and provide helpful assistance.",
+        content:
+          "Thanks for your message! This is a demo response. In a real implementation, I would process your request and provide helpful assistance.",
         isUser: false,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, botResponse])
-    }, 1000)
-  }
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    }, 1000);
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      sendMessage()
+    if (e.key === "Enter") {
+      sendMessage();
     }
-  }
+  };
 
   const SidebarContent = () => (
     <div className="p-4 space-y-4">
@@ -92,7 +94,7 @@ export default function Chatbot() {
         </div>
       </div>
     </div>
-  )
+  );
 
   return (
     <Layout>
@@ -146,12 +148,16 @@ export default function Chatbot() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
                 >
-                  <Card className={`max-w-[80%] ${message.isUser ? 'bg-primary text-primary-foreground' : ''}`}>
+                  <Card
+                    className={`max-w-[80%] ${message.isUser ? "bg-primary text-primary-foreground" : ""}`}
+                  >
                     <CardContent className="p-3">
                       <p className="text-sm">{message.content}</p>
-                      <p className={`text-xs mt-1 ${message.isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                      <p
+                        className={`text-xs mt-1 ${message.isUser ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                      >
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </CardContent>
@@ -179,5 +185,5 @@ export default function Chatbot() {
         </div>
       </div>
     </Layout>
-  )
+  );
 }

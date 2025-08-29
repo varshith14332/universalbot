@@ -1,12 +1,18 @@
-import { Layout } from "@/components/layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Link } from "react-router-dom"
-import { ArrowLeft, Construction } from "lucide-react"
+import { Layout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Construction } from "lucide-react";
 
 interface PlaceholderProps {
-  title: string
-  description: string
+  title: string;
+  description: string;
 }
 
 export default function Placeholder({ title, description }: PlaceholderProps) {
@@ -28,7 +34,8 @@ export default function Placeholder({ title, description }: PlaceholderProps) {
             </CardHeader>
             <CardContent className="pb-12">
               <p className="text-muted-foreground mb-6">
-                This page is coming soon. Continue prompting to help fill in the content for this page!
+                This page is coming soon. Continue prompting to help fill in the
+                content for this page!
               </p>
               <Link to="/">
                 <Button>
@@ -41,33 +48,33 @@ export default function Placeholder({ title, description }: PlaceholderProps) {
         </div>
       </div>
     </Layout>
-  )
+  );
 }
 
 // Specific placeholder pages
 export function About() {
   return (
-    <Placeholder 
-      title="About Universal Bot" 
+    <Placeholder
+      title="About Universal Bot"
       description="Learn more about our mission to break communication barriers worldwide."
     />
-  )
+  );
 }
 
 export function Contact() {
   return (
-    <Placeholder 
-      title="Contact Us" 
+    <Placeholder
+      title="Contact Us"
       description="Get in touch with our team for support or inquiries."
     />
-  )
+  );
 }
 
 export function Privacy() {
   return (
-    <Placeholder 
-      title="Privacy Policy" 
+    <Placeholder
+      title="Privacy Policy"
       description="Your privacy and data security are our top priorities."
     />
-  )
+  );
 }

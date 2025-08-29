@@ -1,8 +1,14 @@
-import { Layout } from "@/components/layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Link } from "react-router-dom"
-import { GraduationCap, ArrowLeft, Star, Trophy, Target } from "lucide-react"
+import { Layout } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { GraduationCap, ArrowLeft, Star, Trophy, Target } from "lucide-react";
 
 export default function Duolingo() {
   return (
@@ -17,7 +23,9 @@ export default function Duolingo() {
                 Back to Home
               </Button>
             </Link>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Duolingo Mode</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              Duolingo Mode
+            </h1>
             <p className="text-lg text-muted-foreground">
               Learn Languages with Universal Bot
             </p>
@@ -34,8 +42,9 @@ export default function Duolingo() {
                   Coming Soon: Learn Languages with Universal Bot
                 </CardTitle>
                 <CardDescription className="text-lg max-w-2xl mx-auto">
-                  We're building an interactive language learning experience that combines AI conversation, 
-                  speech recognition, and gamified lessons to help you master new languages naturally.
+                  We're building an interactive language learning experience
+                  that combines AI conversation, speech recognition, and
+                  gamified lessons to help you master new languages naturally.
                 </CardDescription>
               </CardHeader>
               <CardContent className="pb-12">
@@ -63,7 +72,9 @@ export default function Duolingo() {
                     <div className="mx-auto mb-3 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                       <Target className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="font-semibold mb-2">Pronunciation Training</h3>
+                    <h3 className="font-semibold mb-2">
+                      Pronunciation Training
+                    </h3>
                     <p className="text-sm text-muted-foreground">
                       Perfect your accent with speech recognition feedback
                     </p>
@@ -76,9 +87,7 @@ export default function Duolingo() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link to="/chatbot">
-                      <Button size="lg">
-                        Try Chatbot Instead
-                      </Button>
+                      <Button size="lg">Try Chatbot Instead</Button>
                     </Link>
                     <Button size="lg" variant="outline" disabled>
                       Notify Me When Ready
@@ -91,5 +100,5 @@ export default function Duolingo() {
         </div>
       </div>
     </Layout>
-  )
+  );
 }
