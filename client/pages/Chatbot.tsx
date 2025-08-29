@@ -909,6 +909,7 @@ export default function Chatbot() {
                           reader.onload = () => {
                             const dataUrl = reader.result as string;
                             setLastImage(dataUrl);
+                            setLastFile(f);
                           };
                           reader.readAsDataURL(f);
                         }}
