@@ -9,6 +9,7 @@ import { handleTTS } from "./routes/tts";
 import { handleImageToText } from "./routes/image-to-text";
 import multer from "multer";
 import { handleImageToTextUpload } from "./routes/image-to-text-upload";
+import { handleCaption } from "./routes/caption";
 
 export function createServer() {
   const app = express();
