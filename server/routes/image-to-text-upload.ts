@@ -8,13 +8,13 @@ const MODEL_PREFERENCE = [
   "microsoft/git-large-coco",
 ].filter(Boolean) as string[];
 
-async function requestCaption(token: string, model: string, buf: Buffer): Promise<string> {
+async function requestCaption(token: string, model: string, buf: Buffer, contentType?: string): Promise<string> {
   const url = `${HF_API_BASE}/${encodeURI(model)}?wait_for_model=true&use_cache=true`;
   const upstream = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/octet-stream",
+      "Content-Type": contentType || "application/octet-stream",
       Accept: "application/json",
       "x-wait-for-model": "true",
     },
@@ -57,9 +57,10 @@ export const handleImageToTextUpload: RequestHandler = async (req, res) => {
 
     const preferred = MODEL_PREFERENCE.length ? MODEL_PREFERENCE : ["nlpconnect/vit-gpt2-image-captioning"];
     let lastErr: any = null;
+    const ct = (file.mimetype && typeof file.mimetype === "string") ? file.mimetype : undefined;
     for (const model of preferred) {
       try {
-        const cap = (await requestCaption(token, model, file.buffer)).trim();
+        const cap = (await requestCaption(token, model, file.buffer, ct)).trim();
         if (cap) {
           res.json({ caption: cap, model });
           return;
