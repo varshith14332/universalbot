@@ -9,7 +9,10 @@ const TTS_BASE = "https://translate.google.com/translate_tts";
 export const handleTTS: RequestHandler = async (req, res) => {
   try {
     const textRaw = (req.query.text ?? req.body?.text) as string | undefined;
-    const langRaw = (req.query.lang ?? req.query.tl ?? req.body?.lang ?? req.body?.tl) as string | undefined;
+    const langRaw = (req.query.lang ??
+      req.query.tl ??
+      req.body?.lang ??
+      req.body?.tl) as string | undefined;
 
     const text = (textRaw || "").toString().trim();
     const lang = (langRaw || "en").toString().trim();
@@ -37,7 +40,13 @@ export const handleTTS: RequestHandler = async (req, res) => {
 
     if (!upstream.ok) {
       const txt = await upstream.text().catch(() => "");
-      res.status(502).json({ error: "Upstream TTS failed", status: upstream.status, detail: txt });
+      res
+        .status(502)
+        .json({
+          error: "Upstream TTS failed",
+          status: upstream.status,
+          detail: txt,
+        });
       return;
     }
 
@@ -46,19 +55,27 @@ export const handleTTS: RequestHandler = async (req, res) => {
 
     // Stream the audio response directly to the client
     if (upstream.body) {
-      upstream.body.pipeTo(new WritableStream({
-        write(chunk) {
-          res.write(chunk);
-        },
-        close() {
-          res.end();
-        },
-        abort() {
-          try { res.end(); } catch {}
-        },
-      })).catch(() => {
-        try { res.end(); } catch {}
-      });
+      upstream.body
+        .pipeTo(
+          new WritableStream({
+            write(chunk) {
+              res.write(chunk);
+            },
+            close() {
+              res.end();
+            },
+            abort() {
+              try {
+                res.end();
+              } catch {}
+            },
+          }),
+        )
+        .catch(() => {
+          try {
+            res.end();
+          } catch {}
+        });
     } else {
       const buf = await upstream.arrayBuffer();
       res.end(Buffer.from(buf));

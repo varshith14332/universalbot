@@ -65,7 +65,12 @@ export default function Chatbot() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [usecase, setUsecase] = useState<null | { key: string; title: string; description: string; context: string }>(null);
+  const [usecase, setUsecase] = useState<null | {
+    key: string;
+    title: string;
+    description: string;
+    context: string;
+  }>(null);
 
   const guessLang = (t: string): string | null => {
     const s = (t || "").trim();
@@ -101,7 +106,10 @@ export default function Chatbot() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: newMessage.content, context: usecase?.context ?? "" }),
+        body: JSON.stringify({
+          prompt: newMessage.content,
+          context: usecase?.context ?? "",
+        }),
       });
       const data = await res.json();
       const replyText =
@@ -115,10 +123,17 @@ export default function Chatbot() {
           const tr = await fetch("/api/translate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: replyText, source: "auto", target: targetLang }),
+            body: JSON.stringify({
+              text: replyText,
+              source: "auto",
+              target: targetLang,
+            }),
           });
           const trData = await tr.json();
-          if (typeof trData?.translation === "string" && trData.translation.trim()) {
+          if (
+            typeof trData?.translation === "string" &&
+            trData.translation.trim()
+          ) {
             finalText = trData.translation;
           }
         } catch {}
@@ -276,9 +291,7 @@ export default function Chatbot() {
 
   const chunkText = (t: string, maxLen = 180) => {
     const parts: string[] = [];
-    const sentences = t
-      .replace(/\s+/g, " ")
-      .split(/(?<=[.!?。！？])\s+/);
+    const sentences = t.replace(/\s+/g, " ").split(/(?<=[.!?。！？])\s+/);
     for (const s of sentences) {
       if (s.length <= maxLen) {
         if (s.trim()) parts.push(s.trim());
@@ -317,8 +330,14 @@ export default function Chatbot() {
           URL.revokeObjectURL(url);
         };
         a.src = url;
-        a.onended = () => { cleanup(); resolve(); };
-        a.onerror = () => { cleanup(); reject(new Error("play-error")); };
+        a.onended = () => {
+          cleanup();
+          resolve();
+        };
+        a.onerror = () => {
+          cleanup();
+          reject(new Error("play-error"));
+        };
         a.play().catch((e) => {
           cleanup();
           reject(e);
@@ -511,7 +530,9 @@ export default function Chatbot() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" disabled={translating}>
                     <Languages className="mr-2 h-4 w-4" />
-                    {translating ? "Translating..." : `Translate${targetLang ? `: ${targetLang}` : ""}`}
+                    {translating
+                      ? "Translating..."
+                      : `Translate${targetLang ? `: ${targetLang}` : ""}`}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -534,28 +555,108 @@ export default function Chatbot() {
               </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">Assistive Chatbots</Button>
+                  <Button variant="outline" size="sm">
+                    Assistive Chatbots
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="max-h-80 overflow-auto">
                   <DropdownMenuLabel>Select a preset</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {[
-                    { key: "legal_aid", title: "Legal Aid (Immigrants)", description: "Translates legal terms, explains rights, helps with forms.", context: "You are a Legal Aid Chatbot for Immigrants. Translate legal terms into user's language, explain rights simply, and guide form-filling step-by-step with clear, neutral, non-judgmental tone." },
-                    { key: "healthcare_rural", title: "Healthcare (Rural)", description: "Understands spoken symptoms, gives basic advice, route to clinics.", context: "You are a Healthcare Assistant for rural communities. Understand brief symptom descriptions, provide general advice and urgency guidance, and suggest contacting local clinics. Avoid diagnoses; include disclaimers." },
-                    { key: "digital_elderly", title: "Digital Tutor (Elderly)", description: "Teaches smartphone/app basics with simple voice-friendly steps.", context: "You are a Digital Literacy Tutor for elderly users. Use very simple language and small steps to teach how to use phones, apps, and online services. Offer voice-friendly instructions and reassurance." },
-                    { key: "edu_support", title: "Education (Non‑Native)", description: "Translates content, explains homework in simple terms.", context: "You are an Educational Support Bot for non-native students. Translate academic content and explain concepts in simple language with examples." },
-                    { key: "jobs_low_literacy", title: "Job Assistant", description: "Helps write resumes, fill applications, prep interviews.", context: "You are a Job Application Assistant for low-literacy users. Help write resumes, fill job forms, and prepare interview answers in user's language with templates." },
-                    { key: "gov_navigator", title: "Gov Services", description: "Explains IDs, benefits, housing processes in simple terms.", context: "You are a Government Services Navigator. Explain how to apply for IDs, benefits, or housing in clear steps, and define terms simply." },
-                    { key: "womens_rights", title: "Women’s Rights", description: "Private multilingual guidance on health, rights, safety.", context: "You are a Women’s Rights Information Bot. Provide private, multilingual guidance on health, rights, education, and safety. Be sensitive and supportive." },
-                    { key: "mental_health", title: "Mental Health", description: "Offers support, breathing exercises, resources.", context: "You are a Mental Health Companion. Offer supportive, non-clinical conversation, simple coping exercises, and resources. Not a substitute for professional help." },
-                    { key: "accessibility", title: "Accessibility (Deaf/HoH)", description: "Captions, read-aloud, and clear text guidance.", context: "You are an Accessibility Assistant for Deaf/HoH users. Provide clear text summaries and support TTS/STT use. Keep sentences concise." },
-                    { key: "emergency_refugee", title: "Emergency (Refugees)", description: "Local emergency info, shelters, medical help.", context: "You are an Emergency Response Bot for refugees/disaster zones. Provide location-appropriate emergency info, shelters, and medical contacts in user's language." },
+                    {
+                      key: "legal_aid",
+                      title: "Legal Aid (Immigrants)",
+                      description:
+                        "Translates legal terms, explains rights, helps with forms.",
+                      context:
+                        "You are a Legal Aid Chatbot for Immigrants. Translate legal terms into user's language, explain rights simply, and guide form-filling step-by-step with clear, neutral, non-judgmental tone.",
+                    },
+                    {
+                      key: "healthcare_rural",
+                      title: "Healthcare (Rural)",
+                      description:
+                        "Understands spoken symptoms, gives basic advice, route to clinics.",
+                      context:
+                        "You are a Healthcare Assistant for rural communities. Understand brief symptom descriptions, provide general advice and urgency guidance, and suggest contacting local clinics. Avoid diagnoses; include disclaimers.",
+                    },
+                    {
+                      key: "digital_elderly",
+                      title: "Digital Tutor (Elderly)",
+                      description:
+                        "Teaches smartphone/app basics with simple voice-friendly steps.",
+                      context:
+                        "You are a Digital Literacy Tutor for elderly users. Use very simple language and small steps to teach how to use phones, apps, and online services. Offer voice-friendly instructions and reassurance.",
+                    },
+                    {
+                      key: "edu_support",
+                      title: "Education (Non‑Native)",
+                      description:
+                        "Translates content, explains homework in simple terms.",
+                      context:
+                        "You are an Educational Support Bot for non-native students. Translate academic content and explain concepts in simple language with examples.",
+                    },
+                    {
+                      key: "jobs_low_literacy",
+                      title: "Job Assistant",
+                      description:
+                        "Helps write resumes, fill applications, prep interviews.",
+                      context:
+                        "You are a Job Application Assistant for low-literacy users. Help write resumes, fill job forms, and prepare interview answers in user's language with templates.",
+                    },
+                    {
+                      key: "gov_navigator",
+                      title: "Gov Services",
+                      description:
+                        "Explains IDs, benefits, housing processes in simple terms.",
+                      context:
+                        "You are a Government Services Navigator. Explain how to apply for IDs, benefits, or housing in clear steps, and define terms simply.",
+                    },
+                    {
+                      key: "womens_rights",
+                      title: "Women’s Rights",
+                      description:
+                        "Private multilingual guidance on health, rights, safety.",
+                      context:
+                        "You are a Women’s Rights Information Bot. Provide private, multilingual guidance on health, rights, education, and safety. Be sensitive and supportive.",
+                    },
+                    {
+                      key: "mental_health",
+                      title: "Mental Health",
+                      description:
+                        "Offers support, breathing exercises, resources.",
+                      context:
+                        "You are a Mental Health Companion. Offer supportive, non-clinical conversation, simple coping exercises, and resources. Not a substitute for professional help.",
+                    },
+                    {
+                      key: "accessibility",
+                      title: "Accessibility (Deaf/HoH)",
+                      description:
+                        "Captions, read-aloud, and clear text guidance.",
+                      context:
+                        "You are an Accessibility Assistant for Deaf/HoH users. Provide clear text summaries and support TTS/STT use. Keep sentences concise.",
+                    },
+                    {
+                      key: "emergency_refugee",
+                      title: "Emergency (Refugees)",
+                      description:
+                        "Local emergency info, shelters, medical help.",
+                      context:
+                        "You are an Emergency Response Bot for refugees/disaster zones. Provide location-appropriate emergency info, shelters, and medical contacts in user's language.",
+                    },
                   ].map((uc) => (
-                    <DropdownMenuItem key={uc.key} onClick={() => {
-                      setUsecase(uc);
-                      const info: Message = { id: (Date.now() + 3).toString(), content: `Mode set: ${uc.title}. ${uc.description}`, isUser: false, timestamp: new Date() };
-                      setMessages((prev) => [...prev, info]);
-                    }}>
+                    <DropdownMenuItem
+                      key={uc.key}
+                      onClick={() => {
+                        setUsecase(uc);
+                        const info: Message = {
+                          id: (Date.now() + 3).toString(),
+                          content: `Mode set: ${uc.title}. ${uc.description}`,
+                          isUser: false,
+                          timestamp: new Date(),
+                        };
+                        setMessages((prev) => [...prev, info]);
+                      }}
+                    >
                       {uc.title}
                     </DropdownMenuItem>
                   ))}

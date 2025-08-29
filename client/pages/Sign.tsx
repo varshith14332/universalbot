@@ -15,7 +15,9 @@ declare global {
 function useScript(src: string) {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
-    let s = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null;
+    let s = document.querySelector(
+      `script[src="${src}"]`,
+    ) as HTMLScriptElement | null;
     if (s && (s as any)._loaded) {
       setLoaded(true);
       return;
@@ -48,8 +50,12 @@ export default function Sign() {
   const [recognized, setRecognized] = useState("...");
   const [loading, setLoading] = useState(false);
 
-  const handsLoaded = useScript("https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js");
-  const drawLoaded = useScript("https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js");
+  const handsLoaded = useScript(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js",
+  );
+  const drawLoaded = useScript(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js",
+  );
 
   const recognizeSign = (landmarks: any[]) => {
     if (!landmarks || landmarks.length < 21) return "...";
@@ -87,8 +93,14 @@ export default function Sign() {
     if (results?.multiHandLandmarks?.length) {
       for (const lm of results.multiHandLandmarks) {
         try {
-          window.drawConnectors(ctx as any, lm, window.HAND_CONNECTIONS, { color: "#22c55e", lineWidth: 3 });
-          window.drawLandmarks(ctx as any, lm, { color: "#10b981", lineWidth: 1 });
+          window.drawConnectors(ctx as any, lm, window.HAND_CONNECTIONS, {
+            color: "#22c55e",
+            lineWidth: 3,
+          });
+          window.drawLandmarks(ctx as any, lm, {
+            color: "#10b981",
+            lineWidth: 1,
+          });
           const label = recognizeSign(lm);
           setRecognized(label);
           ctx.fillStyle = "#10b981";
@@ -108,13 +120,17 @@ export default function Sign() {
     if (!videoRef.current) return;
     setLoading(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
 
       const hands = new window.Hands({
-        locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+        locateFile: (file: string) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
       });
       hands.setOptions({
         maxNumHands: 1,
@@ -166,13 +182,31 @@ export default function Sign() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
-                  <video ref={videoRef} className="w-full rounded border bg-black" muted playsInline />
+                  <video
+                    ref={videoRef}
+                    className="w-full rounded border bg-black"
+                    muted
+                    playsInline
+                  />
                   <canvas ref={canvasRef} className="w-full rounded border" />
                   <div className="flex gap-2">
-                    <Button onClick={startCamera} disabled={loading || running || !handsLoaded || !drawLoaded}>
-                      {loading ? "Starting..." : running ? "Running" : "Start Camera"}
+                    <Button
+                      onClick={startCamera}
+                      disabled={
+                        loading || running || !handsLoaded || !drawLoaded
+                      }
+                    >
+                      {loading
+                        ? "Starting..."
+                        : running
+                          ? "Running"
+                          : "Start Camera"}
                     </Button>
-                    <Button variant="outline" onClick={stopCamera} disabled={!running}>
+                    <Button
+                      variant="outline"
+                      onClick={stopCamera}
+                      disabled={!running}
+                    >
                       Stop Camera
                     </Button>
                   </div>
@@ -183,7 +217,9 @@ export default function Sign() {
                     {recognized}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    This demo uses MediaPipe Hands in your browser. It recognizes very simple demo gestures ("Hello" / "Hi"). You can extend the rules for more signs.
+                    This demo uses MediaPipe Hands in your browser. It
+                    recognizes very simple demo gestures ("Hello" / "Hi"). You
+                    can extend the rules for more signs.
                   </p>
                 </div>
               </div>

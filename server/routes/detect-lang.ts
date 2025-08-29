@@ -21,12 +21,14 @@ async function tryLibreDetect(base: string, text: string) {
       const list = Array.isArray(detections)
         ? detections
         : Array.isArray((detections as any)?.detections)
-        ? (detections as any).detections
-        : [];
-      const top = list.reduce((a: any, b: any) =>
-        a && a.confidence > b.confidence ? a : b,
-      list[0]);
-      if (top?.language) return { language: top.language, confidence: top.confidence ?? null };
+          ? (detections as any).detections
+          : [];
+      const top = list.reduce(
+        (a: any, b: any) => (a && a.confidence > b.confidence ? a : b),
+        list[0],
+      );
+      if (top?.language)
+        return { language: top.language, confidence: top.confidence ?? null };
     }
   } catch {}
 
@@ -42,12 +44,14 @@ async function tryLibreDetect(base: string, text: string) {
       const list = Array.isArray(detections)
         ? detections
         : Array.isArray((detections as any)?.detections)
-        ? (detections as any).detections
-        : [];
-      const top = list.reduce((a: any, b: any) =>
-        a && a.confidence > b.confidence ? a : b,
-      list[0]);
-      if (top?.language) return { language: top.language, confidence: top.confidence ?? null };
+          ? (detections as any).detections
+          : [];
+      const top = list.reduce(
+        (a: any, b: any) => (a && a.confidence > b.confidence ? a : b),
+        list[0],
+      );
+      if (top?.language)
+        return { language: top.language, confidence: top.confidence ?? null };
     }
   } catch {}
 
@@ -61,7 +65,9 @@ async function tryLingvaDetect(text: string) {
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
-    const lang = (data?.info?.from || data?.src || data?.source || null) as string | null;
+    const lang = (data?.info?.from || data?.src || data?.source || null) as
+      | string
+      | null;
     if (lang) return { language: lang, confidence: null };
   } catch {}
   return null;
