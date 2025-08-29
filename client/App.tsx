@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Chatbot from "./pages/Chatbot";
 import Duolingo from "./pages/Duolingo";
+import { About, Contact, Privacy } from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/duolingo" element={<Duolingo />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
