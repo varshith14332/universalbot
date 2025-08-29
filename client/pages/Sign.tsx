@@ -49,6 +49,7 @@ export default function Sign() {
   const [running, setRunning] = useState(false);
   const [recognized, setRecognized] = useState("...");
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const handsLoaded = useScript(
     "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js",
@@ -70,6 +71,38 @@ export default function Sign() {
     if (allBelow) return "Hello"; // fist-like
     if (allAbove) return "Hi"; // open hand up
     return "...";
+  };
+
+  const readSetting = <T,>(key: string, fallback: T): T => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) as T) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
+  const getEffectiveTarget = (): string | null => {
+    const auto = readSetting<boolean>("settings.autoTranslate", false);
+    const tl = readSetting<string | null>("settings.targetLang", null);
+    return tl && auto ? tl : tl; // allow manual dropdown usage from settings
+  };
+
+  const translateIfNeeded = async (text: string): Promise<string> => {
+    const to = getEffectiveTarget();
+    if (!to) return text;
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, source: "auto", target: to }),
+      });
+      if (!res.ok) return text;
+      const data = await res.json();
+      return (data?.translation as string) || text;
+    } catch {
+      return text;
+    }
   };
 
   const drawResults = (results: any) => {
@@ -157,6 +190,39 @@ export default function Sign() {
     }
   };
 
+  const grabFrameBlob = async (): Promise<Blob | null> => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    return await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+    );
+  };
+
+  const sendCurrentFrame = async () => {
+    const blob = await grabFrameBlob();
+    if (!blob) return;
+    setSending(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", blob, "frame.jpg");
+      const res = await fetch("/api/sign", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      let text = "";
+      if (typeof data?.sign_text === "string") text = data.sign_text;
+      else if (typeof data?.label === "string") text = data.label;
+      else if (typeof data?.prediction === "string") text = data.prediction;
+      else if (typeof data?.result === "string") text = data.result;
+      else if (typeof data?.raw === "string") text = data.raw;
+      text = (text || "").toString().trim();
+      if (text) {
+        const final = await translateIfNeeded(text);
+        setRecognized(final);
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
   const stopCamera = () => {
     setRunning(false);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -208,6 +274,13 @@ export default function Sign() {
                       disabled={!running}
                     >
                       Stop Camera
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={sendCurrentFrame}
+                      disabled={!running || sending}
+                    >
+                      {sending ? "Analyzing..." : "Analyze Sign"}
                     </Button>
                   </div>
                 </div>

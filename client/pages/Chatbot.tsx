@@ -65,6 +65,10 @@ export default function Chatbot() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [ocrLoading, setOcrLoading] = useState(false);
+  const [captionLoading, setCaptionLoading] = useState(false);
+  const [lastImage, setLastImage] = useState<string | null>(null);
+  const [lastFile, setLastFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [usecase, setUsecase] = useState<null | {
     key: string;
     title: string;
@@ -267,6 +271,130 @@ export default function Chatbot() {
     { code: "ta", name: "Tamil" },
   ];
 
+  const getEffectiveTarget = (): string | null => {
+    const auto = readSetting<boolean>("settings.autoTranslate", false);
+    const tl = readSetting<string | null>("settings.targetLang", null);
+    return targetLang ?? (auto ? tl : null);
+  };
+
+  const translateIfNeeded = async (text: string): Promise<string> => {
+    const to = getEffectiveTarget();
+    if (!to) return text;
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, source: "auto", target: to }),
+      });
+      if (!res.ok) return text;
+      const data = await res.json();
+      const translated: string = data?.translation || "";
+      return translated || text;
+    } catch {
+      return text;
+    }
+  };
+
+  const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
+    const res = await fetch(dataUrl);
+    return await res.blob();
+  };
+
+  const describeFromSource = async (
+    file?: File | null,
+    dataUrl?: string | null,
+  ) => {
+    if (!file && !dataUrl) return;
+    try {
+      setCaptionLoading(true);
+      // Use server-side combined Caption+OCR
+      let caption = "";
+      if (file) {
+        const fd = new FormData();
+        fd.append("image", file);
+        const up = await fetch("/api/caption", { method: "POST", body: fd });
+        if (up.ok) {
+          const dataUp = await up.json();
+          caption = (dataUp?.caption || "").trim();
+        }
+      } else if (dataUrl) {
+        const blob = await dataUrlToBlob(dataUrl);
+        const fd = new FormData();
+        fd.append("image", blob, "capture.png");
+        const up = await fetch("/api/caption", { method: "POST", body: fd });
+        if (up.ok) {
+          const dataUp = await up.json();
+          caption = (dataUp?.caption || "").trim();
+        }
+      }
+      if (caption) {
+        const final = await translateIfNeeded(caption);
+        const botResponse: Message = {
+          id: (Date.now() + 5).toString(),
+          content: final,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botResponse]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 10).toString(),
+            content: "No description or text found.",
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 11).toString(),
+          content: "Image processing unavailable.",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setCaptionLoading(false);
+    }
+  };
+
+  const ocrOnDataUrl = async (dataUrl: string): Promise<string> => {
+    try {
+      if (!(window as any).Tesseract) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src =
+            "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+          s.onload = () => resolve();
+          s.onerror = () => reject(new Error("Failed to load OCR"));
+          document.head.appendChild(s);
+        });
+      }
+      const { Tesseract } = window as any;
+      const ocr = readSetting<string>("settings.ocrLang", "eng");
+      const result = await Tesseract.recognize(dataUrl, ocr, {
+        tessedit_char_whitelist:
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -'",
+        preserve_interword_spaces: "1",
+        tessedit_pageseg_mode: "6",
+      });
+      const text = (result?.data?.text || "").trim();
+      const conf =
+        typeof result?.data?.confidence === "number"
+          ? result.data.confidence
+          : 0;
+      if (!text) return "";
+      if (conf < 60) return ""; // suppress low-confidence gibberish
+      return text;
+    } catch {
+      return "";
+    }
+  };
+
   const translateText = async (to: string, overrideText?: string) => {
     const text =
       (overrideText ?? inputMessage.trim()) ||
@@ -284,6 +412,7 @@ export default function Chatbot() {
           target: to,
         }),
       });
+      if (!res.ok) throw new Error("translate-failed");
       const data = await res.json();
       const translated: string = data?.translation || "";
       if (translated) {
@@ -295,6 +424,16 @@ export default function Chatbot() {
         };
         setMessages((prev) => [...prev, botResponse]);
       }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 9).toString(),
+          content: "Translation service unavailable.",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setTranslating(false);
     }
@@ -722,6 +861,13 @@ export default function Chatbot() {
                       playsInline
                       muted
                     ></video>
+                    {lastImage ? (
+                      <img
+                        src={lastImage}
+                        alt="Selected preview"
+                        className="w-full max-h-60 object-contain rounded border"
+                      />
+                    ) : null}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -765,7 +911,30 @@ export default function Chatbot() {
                             canvas.width,
                             canvas.height,
                           );
+                          // Simple preprocessing to improve OCR accuracy
+                          try {
+                            const img = ctx.getImageData(
+                              0,
+                              0,
+                              canvas.width,
+                              canvas.height,
+                            );
+                            const d = img.data;
+                            for (let i = 0; i < d.length; i += 4) {
+                              const r = d[i],
+                                g = d[i + 1],
+                                b = d[i + 2];
+                              let v = 0.2126 * r + 0.7152 * g + 0.0722 * b; // grayscale
+                              v = v * 1.2 - 20; // contrast/brightness tweak
+                              v = v < 0 ? 0 : v > 255 ? 255 : v;
+                              const thr = v > 180 ? 255 : 0; // binarize
+                              d[i] = d[i + 1] = d[i + 2] = thr;
+                            }
+                            ctx.putImageData(img, 0, 0);
+                          } catch {}
                           const dataUrl = canvas.toDataURL("image/png");
+                          setLastImage(dataUrl);
+                          setLastFile(null);
                           setOcrLoading(true);
                           try {
                             // Load Tesseract.js from CDN lazily
@@ -788,18 +957,142 @@ export default function Chatbot() {
                             const result = await Tesseract.recognize(
                               dataUrl,
                               ocr,
+                              {
+                                tessedit_char_whitelist:
+                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -'",
+                                preserve_interword_spaces: "1",
+                                tessedit_pageseg_mode: "6",
+                              },
                             );
                             const text = result?.data?.text?.trim();
-                            if (text)
-                              setInputMessage(
-                                (prev) => (prev ? prev + " " : "") + text,
-                              );
+                            if (text) {
+                              const final = await translateIfNeeded(text);
+                              const botResponse: Message = {
+                                id: (Date.now() + 6).toString(),
+                                content: final,
+                                isUser: false,
+                                timestamp: new Date(),
+                              };
+                              setMessages((prev) => [...prev, botResponse]);
+                            }
                           } catch {}
                           setOcrLoading(false);
                         }}
                         disabled={ocrLoading}
                       >
-                        {ocrLoading ? "Processing..." : "Capture & Extract"}
+                        {ocrLoading ? "Processing..." : "OCR (Extract Text)"}
+                      </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const reader = new FileReader();
+                          reader.onload = async () => {
+                            const dataUrl = reader.result as string;
+                            setLastImage(dataUrl);
+                            setLastFile(f);
+                            await describeFromSource(f, dataUrl);
+                            try {
+                              if (fileInputRef.current)
+                                (fileInputRef.current as any).value = "";
+                            } catch {}
+                          };
+                          reader.readAsDataURL(f);
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Upload Image
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={async () => {
+                          if (!lastImage) return;
+                          try {
+                            setCaptionLoading(true);
+                            // Caption (prefer multipart upload for best quality)
+                            let caption = "";
+                            if (lastFile) {
+                              const fd = new FormData();
+                              fd.append("image", lastFile);
+                              const up = await fetch(
+                                "/api/image-to-text-upload",
+                                {
+                                  method: "POST",
+                                  body: fd,
+                                },
+                              );
+                              if (!up.ok)
+                                throw new Error("caption-upload-failed");
+                              const dataUp = await up.json();
+                              caption = (dataUp?.caption || "").trim();
+                            } else if (lastImage) {
+                              // Convert dataURL capture to Blob and upload
+                              const blob = await dataUrlToBlob(lastImage);
+                              const fd = new FormData();
+                              fd.append("image", blob, "capture.png");
+                              const up = await fetch(
+                                "/api/image-to-text-upload",
+                                {
+                                  method: "POST",
+                                  body: fd,
+                                },
+                              );
+                              if (!up.ok)
+                                throw new Error("caption-upload-failed");
+                              const dataUp = await up.json();
+                              caption = (dataUp?.caption || "").trim();
+                            }
+                            // OCR on the same image
+                            const ocrText = await ocrOnDataUrl(lastImage);
+                            const combined = caption
+                              ? ocrText
+                                ? `${caption}\n\n${ocrText}`
+                                : caption
+                              : ocrText;
+                            if (combined) {
+                              const final = await translateIfNeeded(combined);
+                              const botResponse: Message = {
+                                id: (Date.now() + 5).toString(),
+                                content: final,
+                                isUser: false,
+                                timestamp: new Date(),
+                              };
+                              setMessages((prev) => [...prev, botResponse]);
+                            } else {
+                              setMessages((prev) => [
+                                ...prev,
+                                {
+                                  id: (Date.now() + 10).toString(),
+                                  content: "No description or text found.",
+                                  isUser: false,
+                                  timestamp: new Date(),
+                                },
+                              ]);
+                            }
+                          } catch {
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                id: (Date.now() + 11).toString(),
+                                content: "Image processing unavailable.",
+                                isUser: false,
+                                timestamp: new Date(),
+                              },
+                            ]);
+                          } finally {
+                            setCaptionLoading(false);
+                          }
+                        }}
+                        disabled={captionLoading || !lastImage}
+                      >
+                        {captionLoading ? "Describing..." : "Describe (HF)"}
                       </Button>
                       <Button
                         variant="outline"
@@ -814,6 +1107,10 @@ export default function Chatbot() {
                         Stop Camera
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tip: Use "Describe (HF)" for scene/product descriptions.
+                      Use OCR to read printed text in the image.
+                    </p>
                   </div>
                 </DialogContent>
               </Dialog>
