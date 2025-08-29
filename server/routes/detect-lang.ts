@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 
-const DEFAULT_BASE = "https://libretranslate.com";
+const DEFAULT_BASE = process.env.LIBRETRANSLATE_URL || "https://libretranslate.de";
 
 export const handleDetectLang: RequestHandler = async (req, res) => {
   try {
@@ -10,14 +10,13 @@ export const handleDetectLang: RequestHandler = async (req, res) => {
       return;
     }
 
-    const base = process.env.LIBRETRANSLATE_URL || DEFAULT_BASE;
-    const params = new URLSearchParams();
-    params.set("q", text);
+    const base = DEFAULT_BASE;
 
+    // LibreTranslate expects JSON for /detect
     const response = await fetch(`${base}/detect`, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q: text }),
     });
 
     if (!response.ok) {
@@ -27,18 +26,12 @@ export const handleDetectLang: RequestHandler = async (req, res) => {
     }
 
     const detections = await response.json();
-    const top =
-      Array.isArray(detections) && detections.length > 0
-        ? detections.reduce((a: any, b: any) =>
-            a.confidence > b.confidence ? a : b,
-          )
-        : null;
+    // detections can be [{language:"en", confidence: 0.6}, ...]
+    const list = Array.isArray(detections) ? detections : Array.isArray(detections?.detections) ? detections.detections : [];
+    const top = list.reduce((a: any, b: any) => (a && a.confidence > b.confidence ? a : b), list[0]);
 
-    res.json({
-      language: top?.language ?? null,
-      confidence: top?.confidence ?? null,
-    });
-  } catch (e) {
+    res.json({ language: top?.language ?? null, confidence: top?.confidence ?? null });
+  } catch {
     res.status(500).json({ error: "Unexpected server error" });
   }
 };
