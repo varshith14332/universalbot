@@ -558,8 +558,14 @@ export default function Chatbot() {
                     <Languages className="mr-2 h-4 w-4" />
                     {(() => {
                       if (translating) return "Translating...";
-                      const auto = readSetting<boolean>("settings.autoTranslate", false);
-                      const tl = readSetting<string | null>("settings.targetLang", null);
+                      const auto = readSetting<boolean>(
+                        "settings.autoTranslate",
+                        false,
+                      );
+                      const tl = readSetting<string | null>(
+                        "settings.targetLang",
+                        null,
+                      );
                       const eff = targetLang ?? (auto ? tl : null);
                       return `Translate${eff ? `: ${eff}` : ""}`;
                     })()}
@@ -725,9 +731,10 @@ export default function Chatbot() {
                               video: { facingMode: { ideal: "environment" } },
                               audio: false,
                             };
-                            const stream = await navigator.mediaDevices.getUserMedia(
-                              constraints,
-                            );
+                            const stream =
+                              await navigator.mediaDevices.getUserMedia(
+                                constraints,
+                              );
                             streamRef.current = stream;
                             if (videoRef.current) {
                               videoRef.current.srcObject = stream;
@@ -774,7 +781,10 @@ export default function Chatbot() {
                               });
                             }
                             const { Tesseract } = window as any;
-                            const ocr = readSetting<string>("settings.ocrLang", "eng");
+                            const ocr = readSetting<string>(
+                              "settings.ocrLang",
+                              "eng",
+                            );
                             const result = await Tesseract.recognize(
                               dataUrl,
                               ocr,

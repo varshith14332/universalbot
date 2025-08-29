@@ -1,7 +1,13 @@
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -51,8 +57,10 @@ export default function Settings() {
     "settings.inputLang",
     "en",
   );
-  const [preferredTargetLang, setPreferredTargetLang] =
-    useLocalStorage<string>("settings.targetLang", "en");
+  const [preferredTargetLang, setPreferredTargetLang] = useLocalStorage<string>(
+    "settings.targetLang",
+    "en",
+  );
   const [autoTranslate, setAutoTranslate] = useLocalStorage<boolean>(
     "settings.autoTranslate",
     false,
@@ -91,7 +99,8 @@ export default function Settings() {
     const load = () => setVoices(w.speechSynthesis?.getVoices?.() || []);
     load();
     w.speechSynthesis?.addEventListener?.("voiceschanged", load);
-    return () => w.speechSynthesis?.removeEventListener?.("voiceschanged", load);
+    return () =>
+      w.speechSynthesis?.removeEventListener?.("voiceschanged", load);
   }, []);
   const selectedVoice = useMemo(
     () => voices.find((v) => v.voiceURI === voiceURI) || null,
@@ -115,8 +124,12 @@ export default function Settings() {
     try {
       const perms = (navigator as any).permissions;
       if (perms?.query) {
-        const c = await perms.query({ name: "camera" as any }).catch(() => null);
-        const m = await perms.query({ name: "microphone" as any }).catch(() => null);
+        const c = await perms
+          .query({ name: "camera" as any })
+          .catch(() => null);
+        const m = await perms
+          .query({ name: "microphone" as any })
+          .catch(() => null);
         if (c?.state) setCamStatus(c.state);
         if (m?.state) setMicStatus(m.state);
       }
@@ -168,7 +181,10 @@ export default function Settings() {
                 <div>
                   <Label>Theme</Label>
                   <div className="mt-2">
-                    <Select value={theme as string} onValueChange={setTheme as any}>
+                    <Select
+                      value={theme as string}
+                      onValueChange={setTheme as any}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select theme" />
                       </SelectTrigger>
@@ -183,13 +199,29 @@ export default function Settings() {
                 <div>
                   <Label>Text size</Label>
                   <div className="mt-2 flex items-center gap-3">
-                    <Button variant="outline" size="sm" onClick={() => setFontScale((s) => Math.max(0.9, +(s - 0.1).toFixed(2)))}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setFontScale((s) =>
+                          Math.max(0.9, +(s - 0.1).toFixed(2)),
+                        )
+                      }
+                    >
                       A-
                     </Button>
                     <div className="text-sm text-muted-foreground w-24 text-center">
                       {Math.round(fontScale * 100)}%
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => setFontScale((s) => Math.min(1.3, +(s + 0.1).toFixed(2)))}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setFontScale((s) =>
+                          Math.min(1.3, +(s + 0.1).toFixed(2)),
+                        )
+                      }
+                    >
                       A+
                     </Button>
                   </div>
@@ -207,7 +239,10 @@ export default function Settings() {
                 <div>
                   <Label>Preferred input language</Label>
                   <div className="mt-2">
-                    <Select value={preferredInputLang} onValueChange={setPreferredInputLang}>
+                    <Select
+                      value={preferredInputLang}
+                      onValueChange={setPreferredInputLang}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
@@ -224,7 +259,10 @@ export default function Settings() {
                 <div>
                   <Label>Auto-translate replies to</Label>
                   <div className="mt-2">
-                    <Select value={preferredTargetLang} onValueChange={setPreferredTargetLang}>
+                    <Select
+                      value={preferredTargetLang}
+                      onValueChange={setPreferredTargetLang}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select language" />
                       </SelectTrigger>
@@ -243,16 +281,26 @@ export default function Settings() {
                 <div className="flex items-center justify-between rounded border p-3">
                   <div>
                     <Label>Enable auto-translate</Label>
-                    <p className="text-xs text-muted-foreground">Translate bot replies automatically.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Translate bot replies automatically.
+                    </p>
                   </div>
-                  <Switch checked={autoTranslate} onCheckedChange={setAutoTranslate} />
+                  <Switch
+                    checked={autoTranslate}
+                    onCheckedChange={setAutoTranslate}
+                  />
                 </div>
                 <div className="flex items-center justify-between rounded border p-3">
                   <div>
                     <Label>Auto-play TTS</Label>
-                    <p className="text-xs text-muted-foreground">Speak bot replies automatically.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Speak bot replies automatically.
+                    </p>
                   </div>
-                  <Switch checked={ttsAutoPlay} onCheckedChange={setTtsAutoPlay} />
+                  <Switch
+                    checked={ttsAutoPlay}
+                    onCheckedChange={setTtsAutoPlay}
+                  />
                 </div>
               </div>
               <Separator />
@@ -266,7 +314,9 @@ export default function Settings() {
                       </SelectTrigger>
                       <SelectContent>
                         {voices.length === 0 ? (
-                          <SelectItem value="system-default" disabled>System default</SelectItem>
+                          <SelectItem value="system-default" disabled>
+                            System default
+                          </SelectItem>
                         ) : (
                           voices.map((v) => (
                             <SelectItem key={v.voiceURI} value={v.voiceURI}>
@@ -302,10 +352,14 @@ export default function Settings() {
                         <SelectItem value="tel">Telugu (tel)</SelectItem>
                         <SelectItem value="jpn">Japanese (jpn)</SelectItem>
                         <SelectItem value="kor">Korean (kor)</SelectItem>
-                        <SelectItem value="chi_sim">Chinese Simplified (chi_sim)</SelectItem>
+                        <SelectItem value="chi_sim">
+                          Chinese Simplified (chi_sim)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-1">Used by Image to Text.</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Used by Image to Text.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -320,7 +374,9 @@ export default function Settings() {
               <div className="flex items-center justify-between rounded border p-3">
                 <div>
                   <Label>Fast mode</Label>
-                  <p className="text-xs text-muted-foreground">Shorter, quicker AI replies (lower token limit).</p>
+                  <p className="text-xs text-muted-foreground">
+                    Shorter, quicker AI replies (lower token limit).
+                  </p>
                 </div>
                 <Switch checked={fastMode} onCheckedChange={setFastMode} />
               </div>
@@ -337,22 +393,32 @@ export default function Settings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium">Camera</div>
-                      <div className="text-xs text-muted-foreground">Status: {camStatus}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Status: {camStatus}
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={requestCamera}>Request</Button>
+                    <Button variant="outline" size="sm" onClick={requestCamera}>
+                      Request
+                    </Button>
                   </div>
                 </div>
                 <div className="rounded border p-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium">Microphone</div>
-                      <div className="text-xs text-muted-foreground">Status: {micStatus}</div>
+                      <div className="text-xs text-muted-foreground">
+                        Status: {micStatus}
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={requestMic}>Request</Button>
+                    <Button variant="outline" size="sm" onClick={requestMic}>
+                      Request
+                    </Button>
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={checkPermissions}>Refresh status</Button>
+              <Button variant="ghost" size="sm" onClick={checkPermissions}>
+                Refresh status
+              </Button>
             </CardContent>
           </Card>
 
@@ -361,8 +427,13 @@ export default function Settings() {
               <CardTitle>Data</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="destructive" onClick={clearLocalData}>Clear local settings</Button>
-              <p className="text-xs text-muted-foreground">This clears preferences stored in your browser. Server keys are not affected.</p>
+              <Button variant="destructive" onClick={clearLocalData}>
+                Clear local settings
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                This clears preferences stored in your browser. Server keys are
+                not affected.
+              </p>
             </CardContent>
           </Card>
         </div>
