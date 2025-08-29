@@ -768,6 +768,20 @@ export default function Chatbot() {
                             canvas.width,
                             canvas.height,
                           );
+                          // Simple preprocessing to improve OCR accuracy
+                          try {
+                            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const d = img.data;
+                            for (let i = 0; i < d.length; i += 4) {
+                              const r = d[i], g = d[i + 1], b = d[i + 2];
+                              let v = 0.2126 * r + 0.7152 * g + 0.0722 * b; // grayscale
+                              v = v * 1.2 - 20; // contrast/brightness tweak
+                              v = v < 0 ? 0 : v > 255 ? 255 : v;
+                              const thr = v > 180 ? 255 : 0; // binarize
+                              d[i] = d[i + 1] = d[i + 2] = thr;
+                            }
+                            ctx.putImageData(img, 0, 0);
+                          } catch {}
                           const dataUrl = canvas.toDataURL("image/png");
                           setLastImage(dataUrl);
                           setOcrLoading(true);
@@ -792,6 +806,12 @@ export default function Chatbot() {
                             const result = await Tesseract.recognize(
                               dataUrl,
                               ocr,
+                              {
+                                tessedit_char_whitelist:
+                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -'",
+                                preserve_interword_spaces: "1",
+                                tessedit_pageseg_mode: "6",
+                              },
                             );
                             const text = result?.data?.text?.trim();
                             if (text)
@@ -803,7 +823,7 @@ export default function Chatbot() {
                         }}
                         disabled={ocrLoading}
                       >
-                        {ocrLoading ? "Processing..." : "Capture & Extract"}
+                        {ocrLoading ? "Processing..." : "OCR (Extract Text)"}
                       </Button>
                       <input
                         ref={fileInputRef}
@@ -871,6 +891,9 @@ export default function Chatbot() {
                         Stop Camera
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Tip: Use "Describe (HF)" for scene/product descriptions. Use OCR to read printed text in the image.
+                    </p>
                   </div>
                 </DialogContent>
               </Dialog>
