@@ -38,6 +38,7 @@ export default function Chatbot() {
   const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const recognitionRef = useRef<any>(null);
 
   const sendMessage = async () => {
@@ -84,7 +85,7 @@ export default function Chatbot() {
     }
   };
 
-  const toggleSpeechToText = () => {
+  const toggleSpeechToText = async () => {
     const w = typeof window !== "undefined" ? (window as any) : null;
     if (!w) return;
 
@@ -102,13 +103,34 @@ export default function Chatbot() {
       return;
     }
 
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+    } catch (e) {
+      setInputMessage(
+        "Microphone permission denied or blocked. Use Open Preview and allow microphone."
+      );
+      return;
+    }
+
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.continuous = false;
+    let finalTranscript = "";
     recognition.onresult = (event: any) => {
-      const transcript = event.results?.[0]?.[0]?.transcript ?? "";
-      if (transcript) setInputMessage(transcript);
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript ?? "";
+        if (result.isFinal) {
+          finalTranscript += transcript + " ";
+        }
+      }
+      if (finalTranscript.trim()) {
+        setInputMessage((prev) => (prev ? prev + " " : "") + finalTranscript.trim());
+        finalTranscript = "";
+      }
     };
     recognition.onerror = () => {
       setIsRecording(false);
@@ -123,6 +145,31 @@ export default function Chatbot() {
       recognition.start();
     } catch {
       setIsRecording(false);
+    }
+  };
+
+  const speakText = () => {
+    const w = typeof window !== "undefined" ? (window as any) : null;
+    if (!w || !w.speechSynthesis) {
+      setInputMessage("Text-to-Speech not supported in this browser.");
+      return;
+    }
+    try {
+      w.speechSynthesis.cancel();
+    } catch {}
+
+    const textToSpeak = inputMessage.trim() || [...messages].reverse().find((m) => !m.isUser)?.content || "";
+    if (!textToSpeak) return;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = "en-US";
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    try {
+      w.speechSynthesis.speak(utterance);
+    } catch {
+      setIsSpeaking(false);
     }
   };
 
@@ -156,6 +203,8 @@ export default function Chatbot() {
     return () => {
       try {
         recognitionRef.current?.stop?.();
+        const w = typeof window !== "undefined" ? (window as any) : null;
+        w?.speechSynthesis?.cancel?.();
       } catch {}
     };
   }, []);
@@ -191,9 +240,9 @@ export default function Chatbot() {
                 <Mic className="mr-2 h-4 w-4" />
                 {isRecording ? "Listening..." : "Speech-to-Text"}
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={speakText} disabled={isSpeaking}>
                 <Volume2 className="mr-2 h-4 w-4" />
-                Text-to-Speech
+                {isSpeaking ? "Speaking..." : "Text-to-Speech"}
               </Button>
               <Button variant="outline" size="sm">
                 <Languages className="mr-2 h-4 w-4" />
