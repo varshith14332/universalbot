@@ -300,6 +300,71 @@ export default function Chatbot() {
     return await res.blob();
   };
 
+  const describeFromSource = async (file?: File | null, dataUrl?: string | null) => {
+    if (!file && !dataUrl) return;
+    try {
+      setCaptionLoading(true);
+      // Caption prefer upload via file or blob
+      let caption = "";
+      if (file) {
+        const fd = new FormData();
+        fd.append("image", file);
+        const up = await fetch("/api/image-to-text-upload", { method: "POST", body: fd });
+        if (up.ok) {
+          const dataUp = await up.json();
+          caption = (dataUp?.caption || "").trim();
+        }
+      } else if (dataUrl) {
+        const blob = await dataUrlToBlob(dataUrl);
+        const fd = new FormData();
+        fd.append("image", blob, "capture.png");
+        const up = await fetch("/api/image-to-text-upload", { method: "POST", body: fd });
+        if (up.ok) {
+          const dataUp = await up.json();
+          caption = (dataUp?.caption || "").trim();
+        }
+      }
+      // OCR (if we have a dataUrl)
+      let ocrText = "";
+      if (dataUrl) {
+        ocrText = await ocrOnDataUrl(dataUrl);
+      }
+      const combined = caption ? (ocrText ? `${caption}\n\n${ocrText}` : caption) : ocrText;
+      if (combined) {
+        const final = await translateIfNeeded(combined);
+        const botResponse: Message = {
+          id: (Date.now() + 5).toString(),
+          content: final,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, botResponse]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 10).toString(),
+            content: "No description or text found.",
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 11).toString(),
+          content: "Image processing unavailable.",
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setCaptionLoading(false);
+    }
+  };
+
   const ocrOnDataUrl = async (dataUrl: string): Promise<string> => {
     try {
       if (!(window as any).Tesseract) {
@@ -795,6 +860,13 @@ export default function Chatbot() {
                       playsInline
                       muted
                     ></video>
+                    {lastImage ? (
+                      <img
+                        src={lastImage}
+                        alt="Selected preview"
+                        className="w-full max-h-60 object-contain rounded border"
+                      />
+                    ) : null}
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -911,10 +983,11 @@ export default function Chatbot() {
                           const f = e.target.files?.[0];
                           if (!f) return;
                           const reader = new FileReader();
-                          reader.onload = () => {
+                          reader.onload = async () => {
                             const dataUrl = reader.result as string;
                             setLastImage(dataUrl);
                             setLastFile(f);
+                            await describeFromSource(f, dataUrl);
                           };
                           reader.readAsDataURL(f);
                         }}
