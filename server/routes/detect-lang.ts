@@ -1,24 +1,20 @@
 import type { RequestHandler } from "express";
 
-const DETECT_URL = "https://translation.googleapis.com/language/translate/v2/detect";
+const DEFAULT_BASE = "https://libretranslate.com";
 
 export const handleDetectLang: RequestHandler = async (req, res) => {
   try {
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      res.status(500).json({ error: "Server is missing GOOGLE_API_KEY" });
-      return;
-    }
     const text: unknown = req.body?.text;
     if (typeof text !== "string" || !text.trim()) {
       res.status(400).json({ error: "Invalid text" });
       return;
     }
 
+    const base = process.env.LIBRETRANSLATE_URL || DEFAULT_BASE;
     const params = new URLSearchParams();
     params.set("q", text);
 
-    const response = await fetch(`${DETECT_URL}?key=${apiKey}`, {
+    const response = await fetch(`${base}/detect`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
@@ -30,15 +26,13 @@ export const handleDetectLang: RequestHandler = async (req, res) => {
       return;
     }
 
-    const data = await response.json();
-    const det = data?.data?.detections?.[0]?.[0] ?? null;
-    if (!det) {
-      res.status(200).json({ language: null, confidence: null });
-      return;
-    }
+    const detections = await response.json();
+    const top = Array.isArray(detections) && detections.length > 0
+      ? detections.reduce((a: any, b: any) => (a.confidence > b.confidence ? a : b))
+      : null;
 
-    res.json({ language: det.language ?? null, confidence: det.confidence ?? null });
-  } catch {
+    res.json({ language: top?.language ?? null, confidence: top?.confidence ?? null });
+  } catch (e) {
     res.status(500).json({ error: "Unexpected server error" });
   }
 };
