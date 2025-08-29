@@ -304,12 +304,12 @@ export default function Chatbot() {
     if (!file && !dataUrl) return;
     try {
       setCaptionLoading(true);
-      // Caption prefer upload via file or blob
+      // Use server-side combined Caption+OCR
       let caption = "";
       if (file) {
         const fd = new FormData();
         fd.append("image", file);
-        const up = await fetch("/api/image-to-text-upload", { method: "POST", body: fd });
+        const up = await fetch("/api/caption", { method: "POST", body: fd });
         if (up.ok) {
           const dataUp = await up.json();
           caption = (dataUp?.caption || "").trim();
@@ -318,20 +318,14 @@ export default function Chatbot() {
         const blob = await dataUrlToBlob(dataUrl);
         const fd = new FormData();
         fd.append("image", blob, "capture.png");
-        const up = await fetch("/api/image-to-text-upload", { method: "POST", body: fd });
+        const up = await fetch("/api/caption", { method: "POST", body: fd });
         if (up.ok) {
           const dataUp = await up.json();
           caption = (dataUp?.caption || "").trim();
         }
       }
-      // OCR (if we have a dataUrl)
-      let ocrText = "";
-      if (dataUrl) {
-        ocrText = await ocrOnDataUrl(dataUrl);
-      }
-      const combined = caption ? (ocrText ? `${caption}\n\n${ocrText}` : caption) : ocrText;
-      if (combined) {
-        const final = await translateIfNeeded(combined);
+      if (caption) {
+        const final = await translateIfNeeded(caption);
         const botResponse: Message = {
           id: (Date.now() + 5).toString(),
           content: final,
