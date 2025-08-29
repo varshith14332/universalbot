@@ -849,6 +849,7 @@ export default function Chatbot() {
                           } catch {}
                           const dataUrl = canvas.toDataURL("image/png");
                           setLastImage(dataUrl);
+                          setLastFile(null);
                           setOcrLoading(true);
                           try {
                             // Load Tesseract.js from CDN lazily
