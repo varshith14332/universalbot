@@ -67,6 +67,7 @@ export default function Chatbot() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [captionLoading, setCaptionLoading] = useState(false);
   const [lastImage, setLastImage] = useState<string | null>(null);
+  const [lastFile, setLastFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [usecase, setUsecase] = useState<null | {
     key: string;
