@@ -21,7 +21,7 @@ function parseDataUrl(dataUrl: string): Buffer | null {
 
 export const handleImageToText: RequestHandler = async (req, res) => {
   try {
-    const token = process.env.HF_TOKEN || process.env.HUGGING_FACE_TOKEN;
+    const token = process.env.HF_TOKEN || process.env.HUGGING_FACE_TOKEN || process.env.HF_API_TOKEN;
     if (!token) {
       res.status(500).json({ error: "Missing Hugging Face token (HF_TOKEN)" });
       return;
