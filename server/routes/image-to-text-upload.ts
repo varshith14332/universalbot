@@ -59,16 +59,14 @@ async function requestCaption(
   }
 }
 
+import Tesseract from "tesseract.js";
+
 export const handleImageToTextUpload: RequestHandler = async (req, res) => {
   try {
     const token =
       process.env.HF_TOKEN ||
       process.env.HUGGING_FACE_TOKEN ||
       process.env.HF_API_TOKEN;
-    if (!token) {
-      res.status(500).json({ error: "Missing Hugging Face token (HF_TOKEN)" });
-      return;
-    }
 
     const file = (req as any).file as Express.Multer.File | undefined;
     if (!file?.buffer?.length) {
@@ -76,36 +74,45 @@ export const handleImageToTextUpload: RequestHandler = async (req, res) => {
       return;
     }
 
-    const preferred = MODEL_PREFERENCE.length
-      ? MODEL_PREFERENCE
-      : ["nlpconnect/vit-gpt2-image-captioning"];
-    let lastErr: any = null;
-    const ct =
-      file.mimetype && typeof file.mimetype === "string"
-        ? file.mimetype
-        : undefined;
-    for (const model of preferred) {
-      try {
-        const cap = (
-          await requestCaption(token, model, file.buffer, ct)
-        ).trim();
-        if (cap) {
-          res.json({ caption: cap, model });
-          return;
+    // If we have a token, try HF captioning first
+    if (token) {
+      const preferred = MODEL_PREFERENCE.length
+        ? MODEL_PREFERENCE
+        : ["nlpconnect/vit-gpt2-image-captioning"];
+      let lastErr: any = null;
+      const ct =
+        file.mimetype && typeof file.mimetype === "string"
+          ? file.mimetype
+          : undefined;
+      for (const model of preferred) {
+        try {
+          const cap = (
+            await requestCaption(token, model, file.buffer, ct)
+          ).trim();
+          if (cap) {
+            res.json({ caption: cap, model });
+            return;
+          }
+        } catch (e) {
+          lastErr = e;
+          continue;
         }
-      } catch (e) {
-        lastErr = e;
-        continue;
       }
+      const status = (lastErr?.status as number) || 502;
+      // Fall through to OCR below if HF failed
     }
-    const status = (lastErr?.status as number) || 502;
-    res
-      .status(502)
-      .json({
-        error: "Hugging Face request failed",
-        status,
-        detail: lastErr?.detail || String(lastErr || ""),
-      });
+
+    // OCR fallback (no token or HF failed)
+    try {
+      const ocr = await Tesseract.recognize(file.buffer, "eng");
+      const text = (ocr?.data?.text || "").trim();
+      if (text) {
+        res.json({ caption: text, model: "tesseract-ocr" });
+        return;
+      }
+    } catch {}
+
+    res.json({ caption: "No description or text found.", model: token ? "hf+ocr" : "ocr-only" });
   } catch (err) {
     res.status(500).json({ error: "Unexpected server error" });
   }
