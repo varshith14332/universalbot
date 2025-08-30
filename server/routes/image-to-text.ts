@@ -65,7 +65,7 @@ export const handleImageToText: RequestHandler = async (req, res) => {
           Accept: "application/json",
           "x-wait-for-model": "true",
         },
-        body: body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
+        body: body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer,
       });
       if (!upstream.ok) {
         const detail = await upstream.text().catch(() => "");
