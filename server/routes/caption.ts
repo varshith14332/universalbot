@@ -24,7 +24,7 @@ async function requestCaption(
       Accept: "application/json",
       "x-wait-for-model": "true",
     },
-    body: buf,
+    body: new Blob([buf], { type: contentType || "application/octet-stream" }),
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");
