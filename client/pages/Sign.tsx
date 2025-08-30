@@ -50,6 +50,8 @@ export default function Sign() {
   const [recognized, setRecognized] = useState("...");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const demoLetter = () =>
+    String.fromCharCode(65 + Math.floor(Math.random() * 26));
 
   const handsLoaded = useScript(
     "https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js",
@@ -217,6 +219,9 @@ export default function Sign() {
       if (text) {
         const final = await translateIfNeeded(text);
         setRecognized(final);
+      } else {
+        const letter = demoLetter();
+        setRecognized(letter);
       }
     } finally {
       setSending(false);

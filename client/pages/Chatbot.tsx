@@ -195,13 +195,30 @@ export default function Chatbot() {
     }
 
     try {
-      if (navigator.mediaDevices?.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+      const perms: any = (navigator as any).permissions;
+      if (perms?.query) {
+        try {
+          const p = await perms.query({ name: "microphone" as any });
+          // Continue to request access; some browsers misreport here.
+        } catch {}
       }
-    } catch (e) {
-      setInputMessage(
-        "Microphone permission denied or blocked. Use Open Preview and allow microphone.",
-      );
+      if (navigator.mediaDevices?.getUserMedia) {
+        const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+        s.getTracks().forEach((t) => t.stop());
+      }
+    } catch (e: any) {
+      const name = e?.name || "Error";
+      if (name === "NotAllowedError") {
+        setInputMessage(
+          "Microphone permission denied. Allow microphone in the address bar, then try again.",
+        );
+      } else if (name === "NotFoundError") {
+        setInputMessage("No microphone found. Plug one in and retry.");
+      } else {
+        setInputMessage(
+          "Could not access microphone. Check browser permissions and HTTPS, then retry.",
+        );
+      }
       return;
     }
 

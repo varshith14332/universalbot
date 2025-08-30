@@ -24,7 +24,10 @@ async function requestCaption(
       Accept: "application/json",
       "x-wait-for-model": "true",
     },
-    body: buf,
+    body: buf.buffer.slice(
+      buf.byteOffset,
+      buf.byteOffset + buf.byteLength,
+    ) as ArrayBuffer,
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");
@@ -66,10 +69,6 @@ export const handleCaption: RequestHandler = async (req, res) => {
       process.env.HF_TOKEN ||
       process.env.HUGGING_FACE_TOKEN ||
       process.env.HF_API_TOKEN;
-    if (!token) {
-      res.status(500).json({ error: "Missing Hugging Face token (HF_TOKEN)" });
-      return;
-    }
     const file = (req as any).file as Express.Multer.File | undefined;
     if (!file?.buffer?.length) {
       res.status(400).json({ error: "No image uploaded" });

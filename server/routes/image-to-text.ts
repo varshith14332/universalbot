@@ -35,7 +35,6 @@ export const handleImageToText: RequestHandler = async (req, res) => {
     }
 
     const imageBase64 = (req.body?.imageBase64 || "") as string;
-    const model = (req.body?.model || DEFAULT_MODEL) as string;
     if (!imageBase64) {
       res.status(400).json({ error: "Missing imageBase64" });
       return;
@@ -66,7 +65,10 @@ export const handleImageToText: RequestHandler = async (req, res) => {
           Accept: "application/json",
           "x-wait-for-model": "true",
         },
-        body,
+        body: body.buffer.slice(
+          body.byteOffset,
+          body.byteOffset + body.byteLength,
+        ) as ArrayBuffer,
       });
       if (!upstream.ok) {
         const detail = await upstream.text().catch(() => "");
@@ -118,13 +120,11 @@ export const handleImageToText: RequestHandler = async (req, res) => {
       }
     }
     const status = (lastErr?.status as number) || 502;
-    res
-      .status(502)
-      .json({
-        error: "Hugging Face request failed",
-        status,
-        detail: lastErr?.detail || String(lastErr || ""),
-      });
+    res.status(502).json({
+      error: "Hugging Face request failed",
+      status,
+      detail: lastErr?.detail || String(lastErr || ""),
+    });
   } catch (err) {
     res.status(500).json({ error: "Unexpected server error" });
   }

@@ -15,7 +15,7 @@
     "build": "pnpm build:client && pnpm build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
-    "start": "node dist/server/node-build.mjs",
+    "start": "node dist/server/production.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
     "typecheck": "tsc"
