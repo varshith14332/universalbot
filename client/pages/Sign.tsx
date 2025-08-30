@@ -221,7 +221,7 @@ export default function Sign() {
         setRecognized(final);
       } else {
         const letter = demoLetter();
-        setRecognized(`${letter} (demo)`);
+        setRecognized(letter);
       }
     } finally {
       setSending(false);
