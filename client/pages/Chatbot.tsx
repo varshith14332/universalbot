@@ -199,12 +199,7 @@ export default function Chatbot() {
       if (perms?.query) {
         try {
           const p = await perms.query({ name: "microphone" as any });
-          if (p?.state === "denied") {
-            setInputMessage(
-              "Microphone is blocked for this site. Click the lock icon > Site settings > Allow Microphone, then reload.",
-            );
-            return;
-          }
+          // Continue to request access; some browsers misreport here.
         } catch {}
       }
       if (navigator.mediaDevices?.getUserMedia) {
