@@ -23,7 +23,10 @@ async function requestCaption(
       Accept: "application/json",
       "x-wait-for-model": "true",
     },
-    body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+    body: buf.buffer.slice(
+      buf.byteOffset,
+      buf.byteOffset + buf.byteLength,
+    ) as ArrayBuffer,
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");
@@ -112,7 +115,10 @@ export const handleImageToTextUpload: RequestHandler = async (req, res) => {
       }
     } catch {}
 
-    res.json({ caption: "No description or text found.", model: token ? "hf+ocr" : "ocr-only" });
+    res.json({
+      caption: "No description or text found.",
+      model: token ? "hf+ocr" : "ocr-only",
+    });
   } catch (err) {
     res.status(500).json({ error: "Unexpected server error" });
   }

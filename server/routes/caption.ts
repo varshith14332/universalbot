@@ -24,7 +24,10 @@ async function requestCaption(
       Accept: "application/json",
       "x-wait-for-model": "true",
     },
-    body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+    body: buf.buffer.slice(
+      buf.byteOffset,
+      buf.byteOffset + buf.byteLength,
+    ) as ArrayBuffer,
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");

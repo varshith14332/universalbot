@@ -33,17 +33,26 @@ async function classifyWithHF(
         "Content-Type": contentType || "application/octet-stream",
         "x-wait-for-model": "true",
       },
-      body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+      body: buf.buffer.slice(
+        buf.byteOffset,
+        buf.byteOffset + buf.byteLength,
+      ) as ArrayBuffer,
     });
     let payload: any = null;
     if (!upstream.ok) {
-      lastDetail = { status: upstream.status, text: await upstream.text().catch(() => "") };
+      lastDetail = {
+        status: upstream.status,
+        text: await upstream.text().catch(() => ""),
+      };
       continue;
     }
     try {
       payload = await upstream.json();
     } catch (e) {
-      lastDetail = { error: "bad_json", text: await upstream.text().catch(() => "") };
+      lastDetail = {
+        error: "bad_json",
+        text: await upstream.text().catch(() => ""),
+      };
       continue;
     }
 
@@ -51,11 +60,19 @@ async function classifyWithHF(
     let candidates: any[] = [];
     if (Array.isArray(payload)) candidates = payload;
     else if (Array.isArray(payload?.labels)) candidates = payload.labels;
-    else if (Array.isArray(payload?.predictions)) candidates = payload.predictions;
+    else if (Array.isArray(payload?.predictions))
+      candidates = payload.predictions;
 
     if (candidates.length) {
-      const best = candidates.reduce((a: any, b: any) => (Number(a.score || 0) > Number(b.score || 0) ? a : b));
-      let label = (best?.label || best?.class || best?.category || "").toString();
+      const best = candidates.reduce((a: any, b: any) =>
+        Number(a.score || 0) > Number(b.score || 0) ? a : b,
+      );
+      let label = (
+        best?.label ||
+        best?.class ||
+        best?.category ||
+        ""
+      ).toString();
       // Extract single A–Z letter from label
       const m = label.match(/[A-Z](?![a-z])/);
       if (m) label = m[0];
@@ -102,7 +119,13 @@ export const handleSignProxy: RequestHandler = async (req, res) => {
         json = { raw: text };
       }
       if (!upstream.ok) {
-        res.status(502).json({ error: "Sign server error", status: upstream.status, detail: json });
+        res
+          .status(502)
+          .json({
+            error: "Sign server error",
+            status: upstream.status,
+            detail: json,
+          });
         return;
       }
       res.json(json);
@@ -116,7 +139,12 @@ export const handleSignProxy: RequestHandler = async (req, res) => {
       return;
     }
 
-    res.status(502).json({ error: "Recognition unavailable", detail: result.detail || null });
+    res
+      .status(502)
+      .json({
+        error: "Recognition unavailable",
+        detail: result.detail || null,
+      });
   } catch (e) {
     res.status(500).json({ error: "Proxy error" });
   }
