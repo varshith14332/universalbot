@@ -65,7 +65,7 @@ export const handleImageToText: RequestHandler = async (req, res) => {
           Accept: "application/json",
           "x-wait-for-model": "true",
         },
-        body: new Blob([body], { type: contentType || "application/octet-stream" }),
+        body: body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength),
       });
       if (!upstream.ok) {
         const detail = await upstream.text().catch(() => "");
