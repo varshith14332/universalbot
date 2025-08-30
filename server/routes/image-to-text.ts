@@ -35,7 +35,6 @@ export const handleImageToText: RequestHandler = async (req, res) => {
     }
 
     const imageBase64 = (req.body?.imageBase64 || "") as string;
-    const model = (req.body?.model || DEFAULT_MODEL) as string;
     if (!imageBase64) {
       res.status(400).json({ error: "Missing imageBase64" });
       return;
@@ -66,7 +65,7 @@ export const handleImageToText: RequestHandler = async (req, res) => {
           Accept: "application/json",
           "x-wait-for-model": "true",
         },
-        body,
+        body: new Blob([body], { type: contentType || "application/octet-stream" }),
       });
       if (!upstream.ok) {
         const detail = await upstream.text().catch(() => "");
