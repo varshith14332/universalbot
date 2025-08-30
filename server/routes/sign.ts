@@ -9,39 +9,62 @@ export const signUpload = upload.single("image");
 async function classifyWithHF(
   buf: Buffer,
   contentType?: string,
-): Promise<string | null> {
+): Promise<{ label: string | null; detail?: any }> {
   const token =
     process.env.HF_TOKEN ||
     process.env.HUGGING_FACE_TOKEN ||
     process.env.HF_API_TOKEN;
-  const model =
-    process.env.HF_SIGN_MODEL ||
-    "prithivMLmods/Alphabet-Sign-Language-Detection";
-  if (!token) return null;
-  const url = `https://api-inference.huggingface.co/models/${encodeURI(model)}?wait_for_model=true&use_cache=true`;
-  const upstream = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-      "Content-Type": contentType || "application/octet-stream",
-      "x-wait-for-model": "true",
-    },
-    body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
-  });
-  if (!upstream.ok) return null;
-  try {
-    const data = await upstream.json();
-    // Expected: [{label: "A", score: 0.99}, ...]
-    if (Array.isArray(data) && data.length) {
-      const best = data.reduce((a: any, b: any) => (a.score > b.score ? a : b));
-      const label = (best?.label || "").toString().trim();
-      return label || null;
+  if (!token) return { label: null, detail: "no_token" };
+  const models = [
+    process.env.HF_SIGN_MODEL,
+    "prithivMLmods/Alphabet-Sign-Language-Detection",
+    "aalof/clipvision-asl-fingerspelling",
+    "ademaulana/CNN-ASL-Alphabet-Sign-Recognition",
+  ].filter(Boolean) as string[];
+
+  let lastDetail: any = null;
+  for (const model of models) {
+    const url = `https://api-inference.huggingface.co/models/${encodeURI(model)}?wait_for_model=true&use_cache=true`;
+    const upstream = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": contentType || "application/octet-stream",
+        "x-wait-for-model": "true",
+      },
+      body: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer,
+    });
+    let payload: any = null;
+    if (!upstream.ok) {
+      lastDetail = { status: upstream.status, text: await upstream.text().catch(() => "") };
+      continue;
     }
-    return null;
-  } catch {
-    return null;
+    try {
+      payload = await upstream.json();
+    } catch (e) {
+      lastDetail = { error: "bad_json", text: await upstream.text().catch(() => "") };
+      continue;
+    }
+
+    // Normalize outputs
+    let candidates: any[] = [];
+    if (Array.isArray(payload)) candidates = payload;
+    else if (Array.isArray(payload?.labels)) candidates = payload.labels;
+    else if (Array.isArray(payload?.predictions)) candidates = payload.predictions;
+
+    if (candidates.length) {
+      const best = candidates.reduce((a: any, b: any) => (Number(a.score || 0) > Number(b.score || 0) ? a : b));
+      let label = (best?.label || best?.class || best?.category || "").toString();
+      // Extract single A–Z letter from label
+      const m = label.match(/[A-Z](?![a-z])/);
+      if (m) label = m[0];
+      label = label.trim();
+      if (label) return { label };
+    }
+    lastDetail = { payload };
   }
+  return { label: null, detail: lastDetail };
 }
 
 export const handleSignProxy: RequestHandler = async (req, res) => {
@@ -87,13 +110,13 @@ export const handleSignProxy: RequestHandler = async (req, res) => {
     }
 
     // 2) Hugging Face fallback (image-classification)
-    const label = await classifyWithHF(file.buffer, ct);
-    if (label) {
-      res.json({ sign_text: label });
+    const result = await classifyWithHF(file.buffer, ct);
+    if (result.label) {
+      res.json({ sign_text: result.label });
       return;
     }
 
-    res.status(502).json({ error: "Recognition unavailable" });
+    res.status(502).json({ error: "Recognition unavailable", detail: result.detail || null });
   } catch (e) {
     res.status(500).json({ error: "Proxy error" });
   }
